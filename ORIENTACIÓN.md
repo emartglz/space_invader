@@ -1,4 +1,4 @@
-# Dwarf Fortress
+# Space Invaders
 
 ## Proyecto de Programación de Máquinas I
 
@@ -11,29 +11,6 @@
 Con la idea de preparar un soporte para lo que más adelante será el curso de Sistemas Operativos el colectivo de la asignatura a decidido orientar un proyecto sin dicho recurso (SO).
 
 Para el desarollo del proyecto resulta casi imprescindible la utilización de Linux como sistema operativo. Aquellos aventureros que insistan en la utilización de Windows deben conocer que el colectivo de la asignatura no brindará soporte para esta plataforma.
-
-## Qué es Dwarf Fortress?
-
-Dwarf Fortress es un juego desarrollado desde 2002 por los hermanos Tarn y Zach Adams, en parte simulación de gestión
-y construcción y en parte [roguelike](https://en.wikipedia.org/wiki/Roguelike). Vamos a estar evaluando la emulación
-de la parte que trata sobre simulación.
-
-El juego comienza con la generación procedural de un mundo, haciendo aleatorio todo, desde las locaciones de
-acuíferos hasta leyendas e historias sobre los habitantes de dicho mundo, lo que significa que cada mundo nuevo
-es distinto. Empezamos nuestra partida encargados de 5-10 enanos que cumplirán, si así lo desean, nuestras órdenes,
-que consisten en designar zonas para cosechar, cavar, construir, recolectar, desechar, entre muchas otras.
-
-El juego no tiene meta, ya que es una simulación, lo que quiere decir que no se puede ganar, así que no importa
-cuán exitosa o rica sea una fortaleza, es destruida de alguna forma, de ahí que el motto de la comunidad que juega
-Dwarf Fortress sea "Losing is Fun!".
-
-Cada enano tiene una personalidad generada proceduralmente y un conjunto de habilidades que bien se asignan
-al principio o se ganan en el transcurso del juego, por lo que cada enano es distinto y mantenerlo vivo, contento
-y trabajando es bastante difícil.
-
-Este modo de simulación es extremadamente complejo en cuanto a la jugabilidad, se pueden tomar infinidad de
-decisiones para tratar de mantener a flote una fortaleza, atacar a los goblins vecinos, construir trampas,
-cavar 150 niveles hasta llegar al magma, generar riquezas para el comercio, son solo algunas de ellas.
 
 ## Dependencias
 
@@ -51,20 +28,47 @@ Los requerimientos básicos (los que garantizan una calificación de 3) del proy
   * Que el juego arranque.
 * Mensaje de bienvenida
   * Su proyecto debe mostrar al inicio los nombre de los integrantes y algo semejante a: "Proyecto de PMI 2018-2019. Presione cualquier tecla para continuar..."
-* Alternar entre niveles
-  * Su proyecto debe ser capaz de alternar entre 3 niveles distintos del juego.
-* Volver a la pantalla de inicio
-  * Su proyecto debe permitir regresar a la pantalla inicio y volver a entrar para editar un documento nuevo, descartando todos los cambios hechos.
+* Mostrar una nave
+  * Su proyecto debe mostrar una nave en la parte baja de la pantalla que se mueva horizontalmente.
+* Mostrar enemigos
+  * Su proyecto debe mostrar un conjunto de enemigos en la parte media-superior de la pantalla moviéndose horizontal
+  y verticalmente.
+* Disparos
+  * La nave y los enemigos deben poder disparar.
+* Puntuacion
+  * En la parte superior de la pantalla debe mostrarse la puntuacion actual, que se gana al destruir un enemigo.
+* Vidas
+  * En la parte inferior de la pantalla deben mostrarse las vidas del jugador que se pierden al ser la nave
+  tocada por disparos o enemigos.
 
-Una **correcta** implementación del anterior grupo de funcionalidades le otorgará 3 puntos. Para alcanzar una nota superior es necesario implementar algunas de las siguientes características opcionales.
-
-Es importante notar que para lograr estos objetivos, las combinaciones de teclas tienen que ser las mismas utilizadas en el juego.
+Una **correcta** implementación del anterior grupo de funcionalidades le otorgará 3 puntos.
+Para alcanzar una nota superior es necesario implementar algunas de las siguientes características opcionales.
 
 ## Funcionalidades optativas
 
 Por su nivel de complejidad no todas tienen el mismo "peso".
 
 Cada funcionalidad otorga una cantidad de puntos determinada, en función de su complejidad. A continuación describimos cada una:
+
+* Distintas dificultades, modificando párametros como, la velocidad del juego, la cantidad de vidas, la cantidad de enemigos y las trayectorias de los enemigos. Deben de haber al menos 5 dificultades seleccionables. Implementar todas vale (0.5p)
+
+* Generación dinámica de enemigos haciendo el juego un ciclo infinito acumulándo puntuación. (0.5p)
+
+* Tabla de puntuaciones para la partida actual. (0.75p)
+
+* Randomizar las trayectorias de los enemigos. (En un momento dado no se sabe cual va a ser la proxima posicion de un enemigo dado) (0.25p)
+
+* Hacer animaciones, donde animacion puede ser una presentacion creativa al inicio del juego o el movimiento de los textos.(Dependiendo de las animaciones que se hagan podran obtener una puntuacion distinta)
+
+* Sonidos. Básicos: al disparar, al perder y al destruir un enemigo. (0.5p) (Dependiendo de la complejidad de los sonidos extras podran obtener una puntuacion distinta)
+
+* IA: Una nave compañera que ayude al jugador, pero que no sea un comportamiento random. (1p)
+
+* Distintas armas para la nave. Disparo vertical por defecto, Disparo vertical y diagonal y un disparo que no se destruya al chocar con un enemigo.
+
+* Objetos que se muevan por la pantalla y de ser destruidas otorguen recompensas como vidas, armas, escudos, etc...
+
+La creatividad sera recompensada.
 
 Como puede verse, es posible lograr más de 5 puntos, calificación que se tendrá en cuenta para la evaluación final de la asignatura. Cada una de las funcionalidades implementadas debe integrarse con las implementadas anteriormente. Esto significa, por ejemplo, **aqui viene algun ejemplo**
 
