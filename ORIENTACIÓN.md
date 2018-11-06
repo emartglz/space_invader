@@ -202,7 +202,7 @@ Para compilar el proyecto solo es necesario ejecutar `make` en el directorio del
 $ make
 ```
 
-Cualquier archivo que se añada en el directorio `src` automáticamente pasará a formar parte del código fuente de su proyecto, por tanto se ensamblará y enlazará apropiadamente para crear el programa `vimasm.elf` sin hacer ninguna modificación en el `Makefile`.
+Cualquier archivo que se añada en el directorio `src` automáticamente pasará a formar parte del código fuente de su proyecto, por tanto se ensamblará y enlazará apropiadamente para crear el programa `space_invaders.elf` sin hacer ninguna modificación en el `Makefile`.
 
 ## QEMU
 
