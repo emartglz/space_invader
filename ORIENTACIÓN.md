@@ -4,7 +4,7 @@
 
 ## Ciencia de la Computación. Curso 2018-2019
 
-<img src="ninvaders.png" alt="Space Invaders" style="width: 200px;"/>
+<img src="ninvaders.svg" alt="Space Invaders" style="width: 200px;"/>
 
 ## Introducción
 
