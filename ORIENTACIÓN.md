@@ -88,7 +88,7 @@ Si a usted se le ocurre otra funcionalidad que resulte interesante y útil, dís
 
 Para la correcta implementación de la tarea se le brinda una plantilla que contiene el código necesario para comenzar a cargar un programa muy básico en una máquina virtual, además de las respectivas funciones para leer del teclado, pintar en la pantalla y consultar el tiempo.
 
-    vimasm/
+    space_invaders/
     ├── src/
     │   ├── multiboot.asm
     │   ├── boot.asm
@@ -238,7 +238,7 @@ Sistema de control de versiones.
 
 Es altamente recomendada la utilización de esta herramienta dada las ventajas que brinda.
 
-Este proyecto se encuentra en el repositorio [http://gitlab.matcom.uh.cu/h.canizares1/vimasm](http://gitlab.matcom.uh.cu/h.canizares1/vimasm). Se recomienda hacer un _fork_ del mismo para trabajar sobre él.
+Este proyecto se encuentra en el repositorio [http://gitlab.matcom.uh.cu/a.fertel1/space_invaders](http://gitlab.matcom.uh.cu/a.fertel1/space_invaders). Se recomienda hacer un _fork_ del mismo para trabajar sobre él.
 
 ## Ayuda
 
