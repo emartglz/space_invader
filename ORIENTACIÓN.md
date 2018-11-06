@@ -72,7 +72,7 @@ Cada funcionalidad otorga una cantidad de puntos determinada, en función de su 
 
 * IA: Una nave compañera que ayude al jugador, pero que no sea un comportamiento random. (1p)
 
-* Distintas armas para la nave. Disparo vertical por defecto, Disparo vertical y diagonal y un disparo que no se destruya al chocar con un enemigo.(0.25)
+* Distintas armas para la nave. Disparo vertical por defecto, Disparo vertical y diagonal y un disparo que no se destruya al chocar con un enemigo.(0.25) (Dependiendo de la creatividad con las distintas armas extras, se podrá obtener mayor puntuación)
 
 * Objetos que se muevan por la pantalla y de ser destruidas otorguen recompensas como vidas, armas, escudos, etc...(0.5)
 
