@@ -4,13 +4,22 @@
 
 ## Ciencia de la Computación. Curso 2018-2019
 
-** Buscar Foto del juego **
+<img src="ninvaders.png" alt="Space Invaders" style="width: 200px;"/>
 
 ## Introducción
 
 Con la idea de preparar un soporte para lo que más adelante será el curso de Sistemas Operativos el colectivo de la asignatura a decidido orientar un proyecto sin dicho recurso (SO).
 
 Para el desarollo del proyecto resulta casi imprescindible la utilización de Linux como sistema operativo. Aquellos aventureros que insistan en la utilización de Windows deben conocer que el colectivo de la asignatura no brindará soporte para esta plataforma.
+
+## Sobre Space Invaders
+
+Space Invaders es el clásico videojuego de arcade, de la nave que dispara contra oleadas oleadas alienígenas, para obtener puntos. El jugador controla la nave, que puede moverse a la derecha o izquierda y tiene un botón de disparo.
+Existe una versión simple de este juego, para linux, cuya instalación esta en los repositorios. Para instalarlo puede ejecutar en la terminal el siguiente comando:
+
+```
+$ sudo apt-get install ninvaders
+```
 
 ## Dependencias
 
@@ -27,7 +36,7 @@ Los requerimientos básicos (los que garantizan una calificación de 3) del proy
 * Comenzar
   * Que el juego arranque.
 * Mensaje de bienvenida
-  * Su proyecto debe mostrar al inicio los nombre de los integrantes y algo semejante a: "Proyecto de PMI 2018-2019. Presione cualquier tecla para continuar..."
+  * Su proyecto debe mostrar al inicio los nombres de los integrantes y algo semejante a: "Proyecto de PMI 2018-2019. Presione cualquier tecla para continuar..."
 * Mostrar una nave
   * Su proyecto debe mostrar una nave en la parte baja de la pantalla que se mueva horizontalmente.
 * Mostrar enemigos
@@ -36,10 +45,9 @@ Los requerimientos básicos (los que garantizan una calificación de 3) del proy
 * Disparos
   * La nave y los enemigos deben poder disparar.
 * Puntuacion
-  * En la parte superior de la pantalla debe mostrarse la puntuacion actual, que se gana al destruir un enemigo.
+  * Debe mostrarse la puntuacion actual, que se gana al destruir un enemigo.
 * Vidas
-  * En la parte inferior de la pantalla deben mostrarse las vidas del jugador que se pierden al ser la nave
-  tocada por disparos o enemigos.
+  * Deben mostrarse las vidas del jugador que se pierden al ser la nave tocada por disparos o enemigos.
 
 Una **correcta** implementación del anterior grupo de funcionalidades le otorgará 3 puntos.
 Para alcanzar una nota superior es necesario implementar algunas de las siguientes características opcionales.
@@ -64,13 +72,13 @@ Cada funcionalidad otorga una cantidad de puntos determinada, en función de su 
 
 * IA: Una nave compañera que ayude al jugador, pero que no sea un comportamiento random. (1p)
 
-* Distintas armas para la nave. Disparo vertical por defecto, Disparo vertical y diagonal y un disparo que no se destruya al chocar con un enemigo.
+* Distintas armas para la nave. Disparo vertical por defecto, Disparo vertical y diagonal y un disparo que no se destruya al chocar con un enemigo.(0.25)
 
-* Objetos que se muevan por la pantalla y de ser destruidas otorguen recompensas como vidas, armas, escudos, etc...
+* Objetos que se muevan por la pantalla y de ser destruidas otorguen recompensas como vidas, armas, escudos, etc...(0.5)
 
 La creatividad sera recompensada.
 
-Como puede verse, es posible lograr más de 5 puntos, calificación que se tendrá en cuenta para la evaluación final de la asignatura. Cada una de las funcionalidades implementadas debe integrarse con las implementadas anteriormente. Esto significa, por ejemplo, **aqui viene algun ejemplo**
+Como puede verse, es posible lograr más de 5 puntos, calificación que se tendrá en cuenta para la evaluación final de la asignatura.
 
 Es muy probable que para realizar (como es debido) algunos de estos requerimientos se necesite de un poco de investigación al respecto.
 
@@ -234,11 +242,7 @@ Este proyecto se encuentra en el repositorio [http://gitlab.matcom.uh.cu/h.caniz
 
 ## Ayuda
 
-Todo ha sido preparado para que se pueda concentrar en la implementación del proyecto únicamente. De cualquier forma el colectivo de la asignatura está preparado para recibir preguntas de cualquier tipo con respecto al código y las herramientas que se brindan.
-
-## Documentación adjunta
-
-Junto con el proyecto se distribuyen varios documentos que pueden resultar de utilidad. Entre ellos se encuentran varios articulos que resultan de gran utilidad para comprender Dwarf Fortress y la myoria de sus funcionalidades. Además, se incluyen tres documentos creados por el desarrollador del proyecto [Tetrasm](https://github.com/programble/tetrasm), en el cual se inspira este proyecto. Otro de los documentos que se incluyen en la tabla con los códigos de escaneo para reconocer las teclas que se presionan. Uno de los recursos más importantes para comprender Dwarf Fortress, es el propio juego, intente jugarlo.
+Todo ha sido preparado para que se pueda concentrar en la implementación del proyecto únicamente. De cualquier forma el colectivo de la asignatura está preparado para recibir preguntas de cualquier tipo con respecto al proyecto.
 
 ### CMOS/RTC
 
