@@ -1,5 +1,10 @@
 %include "video.mac"
 %include "keyboard.mac"
+%include "presentation.asm"
+;%include "keyboard.asm"
+
+section .bss
+tecla resb 1
 
 section .text
 
@@ -22,6 +27,8 @@ extern calibrate
   add esp, 2
 %endmacro
 
+
+
 global game
 game:
   ; Initialize game
@@ -35,6 +42,7 @@ game:
   game.loop:
     .input:
       call get_input
+
 
     ; Main loop.
 
@@ -57,11 +65,14 @@ draw.green:
 
 get_input:
     call scan
+    mov edi, tecla
+    stosb
     push ax
     ; The value of the input is on 'word [esp]'
 
     ; Your bindings here
-    
+    bind KEY.UP, draw.red
+    bind KEY.DOWN, draw.green
 
     add esp, 2 ; free the stack
     ret

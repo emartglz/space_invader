@@ -37,3 +37,5 @@ putc:
 
     mov bx, [esp + 4]
     mov [FBUFFER + eax], bx
+
+    ret
