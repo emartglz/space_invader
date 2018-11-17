@@ -1,15 +1,15 @@
 %include "video.mac"
 %include "keyboard.mac"
+%include "map.mac"
+
 %include "presentation.asm"
 ;%include "keyboard.asm"
 
 section .bss
 tecla resb 1
-
-section .bss
 map resb 8000
 ship resw 1
-ship_map resd 1
+ship_map resw 1
 
 section .text
 
@@ -18,24 +18,6 @@ extern putc
 extern scan
 extern calibrate
 
-%macro PAINT_MAP 1
-  xor eax, eax
-  xor ebx, ebx
-  xor ecx, ecx
-  xor edx, edx
-
-  %%jump:
-  push dword [%1 + edx]
-  call putc
-  add esp, 4
-  add edx, 4
-  cmp edx, 8000
-  jl %%jump
-  xor eax, eax
-  xor ebx, ebx
-  xor ecx, ecx
-  xor edx, edx
-%endmacro
 
 ; Bind a key to a procedure
 %macro bind 2
@@ -81,21 +63,11 @@ game:
   ; Calibrate the timing
   call calibrate
 
-  call fill_map
-  
   mov [ship], word 0b0000_0010_0000_0000
-  mov eax, map + 8
-  mov [ship_map], eax
-  mov eax, [ship_map]
-  ;mov [eax + 1], byte 6
-  ;mov [eax], byte '#'
-
 
   ; Snakasm main loop
   game.loop:
-
-    PAINT_MAP map
-
+    
     .input:
       call get_input
 
@@ -104,7 +76,11 @@ game:
       xor ecx, ecx
       xor edx, edx
 
-      call refresh_map
+      FILL_MAP map
+      REFRESH_MAP ship, map
+      PAINT_MAP map
+
+      ;call draw.green
 
       xor eax, eax
       xor ebx, ebx
@@ -150,82 +126,6 @@ move_right:
   mov [ship + 1], byte 77
   move_right.next:
   ret
-
-refresh_map:
-  mov edx, [ship_map]
-  ;mov [edx + 1], byte 6
-  mov [edx], byte 0
-  ;mov [edx - 4 + 1], byte 6
-  mov [edx - 4], byte 0
-  ;mov [edx -8 + 1], byte 6
-  mov [edx - 8], byte 0
-  ;mov [edx + 4 + 1], byte 6
-  mov [edx + 4], byte 0
-  ;mov [edx +8 + 1], byte 6
-  mov [edx + 8], byte 0
-
-  mov al, [ship]
-  mov bl, 80
-  mul bl
-  mov cl, byte[ship + 1]
-  add eax, ecx
-  mov ebx, 4
-  mul ebx
-  add eax, map
-  mov [ship_map], eax
-  mov edx, [ship_map]
-  mov [edx + 1], byte 5
-  mov [edx], byte '8'
-  mov [edx - 4 + 1], byte 5
-  mov [edx - 4], byte '/'
-  mov [edx -8 + 1], byte 7
-  mov [edx - 8], byte '<'
-  mov [edx + 4 + 1], byte 5
-  mov [edx + 4], byte '\'
-  mov [edx +8 + 1], byte 7
-  mov [edx + 8], byte '>'
-  
-  xor eax, eax
-  xor ebx, ebx
-  xor ecx, ecx
-  xor edx, edx
-  ret
-
-fill_map:
-  mov ebx, 0
-  mov ah, 0
-  mov al, 0
-
-  fill_map.jump:  
-  mov [map + ebx + 3], al
-  mov [map + ebx + 2], ah
-  mov [map + ebx + 1], byte 2
-  mov [map + ebx], byte 0
-  
-  add ebx, 4
-  cmp ebx, 8000
-  je fill_map.end
-  inc al
-  cmp al, 80
-  je fill_map.incfil
-  jmp fill_map.jump
-
-  fill_map.incfil:
-  mov al, 0
-  inc ah
-  cmp ah, 25
-  je fill_map.end
-  jmp fill_map.jump
-
-  fill_map.end:
-  xor eax, eax
-  xor ebx, ebx
-  xor ecx, ecx
-  xor edx, edx
-  ret
-
-fill_map.alien:
-
 
 draw.red:
   FILL_SCREEN BG.RED
