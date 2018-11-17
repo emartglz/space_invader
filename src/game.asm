@@ -10,6 +10,7 @@ tecla resb 1
 map resb 8000
 ship resw 1
 ship_map resw 1
+drawables resd 100
 
 section .text
 
@@ -27,26 +28,12 @@ extern calibrate
   %%next:
 %endmacro
 
-;1 arriba, 2 derecha, 3 abajo, 4 izquierda
-%macro MOVE 4
-  cmp byte [esp], KEY.UP
-  je %1
-  cmp byte [esp], KEY.RIGHT
-  je %2
-  cmp byte [esp], KEY.DOWN
-  je %3
-  cmp byte [esp], KEY.LEFT
-  je %4
-%endmacro
-
 ; Fill the screen with the given background color
 %macro FILL_SCREEN 1
   push word %1
   call clear
   add esp, 2
 %endmacro
-
-
 
 global game
 game:
@@ -55,6 +42,10 @@ game:
   xor ecx, ecx
   xor edx, edx
 
+  ;push map
+  ;push dword 0
+  ;call fill_map
+  ;add esp, 8
   
   ; Initialize game
 
@@ -63,6 +54,11 @@ game:
   ; Calibrate the timing
   call calibrate
 
+  mov [drawables], dword 0
+  mov [drawables + 4], dword fill_map
+  mov [drawables + 8], dword ship
+  mov [drawables + 12], dword paint_ship
+  
   mov [ship], word 0b0000_0010_0000_0000
 
   ; Snakasm main loop
@@ -76,8 +72,22 @@ game:
       xor ecx, ecx
       xor edx, edx
 
-      FILL_MAP map
-      REFRESH_MAP ship, map
+      REFRESH_MAP map, drawables, 16
+
+      ;push map
+      ;push dword 0
+      ;call fill_map
+      ;add esp, 8
+
+      ; push map
+      ; push ship
+      ; call paint_ship
+      ; add esp, 8
+
+      ; push map
+      ; call paint_map
+      ; add esp, 4
+
       PAINT_MAP map
 
       ;call draw.green
@@ -143,7 +153,6 @@ get_input:
     stosb
     push ax
     ; The value of the input is on 'word [esp]'
-    ;MOVE move_up, move_right, move_down, move_left
     ; Your bindings here
 
     bind KEY.UP, move_up

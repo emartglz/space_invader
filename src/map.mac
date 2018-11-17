@@ -5,42 +5,26 @@
 
 extern putc
 extern refresh_map
+extern paint_map
 extern fill_map
+extern paint_ship
 
 %endif
 
 %macro PAINT_MAP 1
-  xor eax, eax
-  xor ebx, ebx
-  xor ecx, ecx
-  xor edx, edx
-
-  %%jump:
-  push dword [%1 + edx]
-  call putc
+  push dword %1
+  call paint_map
   add esp, 4
-  add edx, 4
-  cmp edx, 8000
-  jl %%jump
-  xor eax, eax
-  xor ebx, ebx
-  xor ecx, ecx
-  xor edx, edx
 %endmacro
 
-;%1 = puntero a la nave, %2 puntero al mapa
-%macro REFRESH_MAP 2
+;%1 puntero al mapa, %2 lista de drawables, %3 cuantos son
+%macro REFRESH_MAP 3
     push dword %1
     push dword %2
+    push dword %3
     call refresh_map
-    add esp, 8
+    add esp, 12
 %endmacro
 
-;%1 = puntero al map
-%macro FILL_MAP 1
-    push dword %1
-    call fill_map
-    add esp, 4
-%endmacro
 
 %endif
