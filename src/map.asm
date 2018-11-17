@@ -63,23 +63,22 @@ paint_map:
 
 global draw
 draw:
+  INI
   %define punt_map [ebp + 12]
   %define punt_object [ebp + 8]
-  %define punt_func_paint [ebp + 4]
 
-  mov eax, punt_map
-  push eax
+  ;mov eax, punt_map
+  ;push eax
   mov eax, punt_object
-  push eax
-  mov eax, punt_func_paint
+  ;push eax
   call [eax]
-  add ebp, 8
+  ;add esp, 8
+
+  END
 
   %undef punt_map
   %undef punt_object
   %undef punt_func_paint
-
-  xor eax, eax
   ret
 
 global paint_ship
@@ -89,11 +88,11 @@ paint_ship:
   %define punt_ship [ebp + 8]
 
   mov edx, punt_ship
-  mov al, [edx]
+  mov al, [edx + 4]
   mov bl, 80
   mul bl
   xor ebx, ebx
-  mov bl, [edx + 1]
+  mov bl, [edx + 4 + 1]
   add eax, ebx
   mov ebx, 4
   mul ebx
@@ -132,9 +131,16 @@ refresh_map:
   .cicle:
     push dword punt_map
     push dword [ebx + eax]
-    call [ebx + eax + 4]
+    ;mov edx [ebx + eax]
+    mov edx, [ebx + eax]
+    call [edx]
     add esp, 8
-    add eax, 8
+    
+
+    ;call [ebx + eax + 4]
+    ;add esp, 8
+
+    add eax, 4
     cmp eax, ecx
     jl .cicle
 

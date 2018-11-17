@@ -6,10 +6,9 @@
 ;%include "keyboard.asm"
 
 section .bss
-tecla resb 1
 map resb 8000
-ship resw 1
-ship_map resw 1
+ship resd 2
+wallpaper resd 2
 drawables resd 100
 
 section .text
@@ -54,12 +53,15 @@ game:
   ; Calibrate the timing
   call calibrate
 
-  mov [drawables], dword 0
-  mov [drawables + 4], dword fill_map
-  mov [drawables + 8], dword ship
-  mov [drawables + 12], dword paint_ship
+  ;mov [drawables], dword 0
+  mov [drawables], dword wallpaper
+  mov [drawables + 4], dword ship
+  ;mov [drawables + 12], dword paint_ship
   
-  mov [ship], word 0b0000_0010_0000_0000
+  mov [wallpaper], dword fill_map
+
+  mov [ship], dword paint_ship
+  mov [ship + 4], word 0b0000_0010_0000_0000
 
   ; Snakasm main loop
   game.loop:
@@ -72,7 +74,7 @@ game:
       xor ecx, ecx
       xor edx, edx
 
-      REFRESH_MAP map, drawables, 16
+      REFRESH_MAP map, drawables, 8
 
       ;push map
       ;push dword 0
@@ -106,34 +108,34 @@ game:
     jmp game.loop
 
 move_up:
-  dec byte [ship]
-  cmp byte [ship], 0
+  dec byte [ship + 4]
+  cmp byte [ship + 4], 0
   jge move_up.next
-  mov [ship], byte 0
+  mov [ship + 4], byte 0
   move_up.next:
   ret
 
 move_down:
-  inc byte [ship]
-  cmp byte [ship], 24
+  inc byte [ship + 4]
+  cmp byte [ship + 4], 24
   jle move_down.next
-  mov [ship], byte 24
+  mov [ship + 4], byte 24
   move_down.next:
   ret
 
 move_left:
-  dec byte [ship + 1]
-  cmp byte [ship + 1], 2
+  dec byte [ship + 4 + 1]
+  cmp byte [ship + 4 + 1], 2
   jge move_left.next
-  mov [ship + 1], byte 2
+  mov [ship + 4 + 1], byte 2
   move_left.next:
   ret
 
 move_right:
-  inc byte [ship + 1]
-  cmp byte [ship + 1], 77
+  inc byte [ship + 4 + 1]
+  cmp byte [ship + 4 + 1], 77
   jle move_right.next
-  mov [ship + 1], byte 77
+  mov [ship + 4 + 1], byte 77
   move_right.next:
   ret
 
@@ -149,8 +151,7 @@ draw.green:
 
 get_input:
     call scan
-    mov edi, tecla
-    stosb
+    ;stosb
     push ax
     ; The value of the input is on 'word [esp]'
     ; Your bindings here
