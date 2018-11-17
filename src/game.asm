@@ -99,9 +99,6 @@ game:
     .input:
       call get_input
 
-<<<<<<< HEAD
-
-=======
       xor eax, eax
       xor ebx, ebx
       xor ecx, ecx
@@ -114,7 +111,6 @@ game:
       xor ecx, ecx
       xor edx, edx
       
->>>>>>> c3827c8fe8f67f7a00cc2b4ade6153d0704a0dc3
     ; Main loop.
 
     ; Here is where you will place your game logic.
@@ -179,15 +175,15 @@ refresh_map:
   mov [ship_map], eax
   mov edx, [ship_map]
   mov [edx + 1], byte 5
-  mov [edx], byte '_'
-  mov [edx - 4 + 1], byte 3
-  mov [edx - 4], byte '*'
+  mov [edx], byte '8'
+  mov [edx - 4 + 1], byte 5
+  mov [edx - 4], byte '/'
   mov [edx -8 + 1], byte 7
-  mov [edx - 8], byte '('
-  mov [edx + 4 + 1], byte 3
-  mov [edx + 4], byte '*'
+  mov [edx - 8], byte '<'
+  mov [edx + 4 + 1], byte 5
+  mov [edx + 4], byte '\'
   mov [edx +8 + 1], byte 7
-  mov [edx + 8], byte ')'
+  mov [edx + 8], byte '>'
   
   xor eax, eax
   xor ebx, ebx
@@ -249,11 +245,6 @@ get_input:
     ; The value of the input is on 'word [esp]'
     ;MOVE move_up, move_right, move_down, move_left
     ; Your bindings here
-<<<<<<< HEAD
-    bind KEY.UP, draw.red
-    bind KEY.DOWN, draw.green
-=======
->>>>>>> c3827c8fe8f67f7a00cc2b4ade6153d0704a0dc3
 
     bind KEY.UP, move_up
     bind KEY.DOWN, move_down
