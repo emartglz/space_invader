@@ -61,61 +61,6 @@ paint_map:
   %undef punt_map 
   ret
 
-global draw
-draw:
-  INI
-  %define punt_map [ebp + 12]
-  %define punt_object [ebp + 8]
-
-  ;mov eax, punt_map
-  ;push eax
-  mov eax, punt_object
-  ;push eax
-  call [eax]
-  ;add esp, 8
-
-  END
-
-  %undef punt_map
-  %undef punt_object
-  %undef punt_func_paint
-  ret
-
-global paint_ship
-paint_ship:
-  INI
-  %define punt_map [ebp + 12]
-  %define punt_ship [ebp + 8]
-
-  mov edx, punt_ship
-  mov al, [edx + 4]
-  mov bl, 80
-  mul bl
-  xor ebx, ebx
-  mov bl, [edx + 4 + 1]
-  add eax, ebx
-  mov ebx, 4
-  mul ebx
-  add eax, punt_map
-
-  mov [eax + 1], byte 5
-  mov [eax], byte '8'
-  mov [eax - 4 + 1], byte 5
-  mov [eax - 4], byte '/'
-  mov [eax - 8 + 1], byte 7
-  mov [eax - 8], byte '<'
-  mov [eax + 4 + 1], byte 5
-  mov [eax + 4], byte '\'
-  mov [eax + 8 + 1], byte 7
-  mov [eax + 8], byte '>'
-
-  END
-
-  %undef punt_map
-  %undef punt_ship
-  ret
-
-
 global refresh_map
 refresh_map:
   INI

@@ -1,6 +1,7 @@
 %include "video.mac"
 %include "keyboard.mac"
 %include "map.mac"
+%include "move.mac"
 
 %include "presentation.asm"
 ;%include "keyboard.asm"
@@ -8,8 +9,10 @@
 section .bss
 map resb 8000
 ship resd 2
+alien resd 2
 wallpaper resd 2
 drawables resd 100
+timer_alien resd 1
 
 section .text
 
@@ -17,6 +20,7 @@ extern clear
 extern putc
 extern scan
 extern calibrate
+extern delay
 
 
 ; Bind a key to a procedure
@@ -24,6 +28,14 @@ extern calibrate
   cmp byte [esp], %1
   jne %%next
   call %2
+  %%next:
+%endmacro
+
+;%1 tecla, %2 macro that move, %3object to move
+%macro bind_move 3
+  cmp byte [esp], %1
+  jne %%next
+  %2 %3
   %%next:
 %endmacro
 
@@ -56,9 +68,14 @@ game:
   ;mov [drawables], dword 0
   mov [drawables], dword wallpaper
   mov [drawables + 4], dword ship
+  mov [drawables + 8], dword alien
   ;mov [drawables + 12], dword paint_ship
   
   mov [wallpaper], dword fill_map
+
+  mov [alien], dword paint_alien
+  mov [alien + 4], word 0b000_0110_0000_0110
+  mov [alien + 6], word 0
 
   mov [ship], dword paint_ship
   mov [ship + 4], word 0b0000_0010_0000_0000
@@ -74,7 +91,7 @@ game:
       xor ecx, ecx
       xor edx, edx
 
-      REFRESH_MAP map, drawables, 8
+      REFRESH_MAP map, drawables, 12
 
       ;push map
       ;push dword 0
@@ -107,37 +124,6 @@ game:
 
     jmp game.loop
 
-move_up:
-  dec byte [ship + 4]
-  cmp byte [ship + 4], 0
-  jge move_up.next
-  mov [ship + 4], byte 0
-  move_up.next:
-  ret
-
-move_down:
-  inc byte [ship + 4]
-  cmp byte [ship + 4], 24
-  jle move_down.next
-  mov [ship + 4], byte 24
-  move_down.next:
-  ret
-
-move_left:
-  dec byte [ship + 4 + 1]
-  cmp byte [ship + 4 + 1], 2
-  jge move_left.next
-  mov [ship + 4 + 1], byte 2
-  move_left.next:
-  ret
-
-move_right:
-  inc byte [ship + 4 + 1]
-  cmp byte [ship + 4 + 1], 77
-  jle move_right.next
-  mov [ship + 4 + 1], byte 77
-  move_right.next:
-  ret
 
 draw.red:
   FILL_SCREEN BG.RED
@@ -156,10 +142,10 @@ get_input:
     ; The value of the input is on 'word [esp]'
     ; Your bindings here
 
-    bind KEY.UP, move_up
-    bind KEY.DOWN, move_down
-    bind KEY.RIGHT, move_right
-    bind KEY.LEFT, move_left
+    bind_move KEY.UP, MOVE_UP, ship
+    bind_move KEY.DOWN, MOVE_DOWN, ship
+    bind_move KEY.RIGHT, MOVE_RIGHT, ship
+    bind_move KEY.LEFT, MOVE_LEFT, ship
     
     add esp, 2 ; free the stack
 
