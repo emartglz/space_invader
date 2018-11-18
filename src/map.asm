@@ -32,8 +32,6 @@ paint_map:
   paint_map.jump:
   mov dx, cx
   shl edx, 16
-  ;mov dh, byte 5
-  ;mov dl, byte '#'
   mov dh, [edi + esi + 1]
   mov dl, [edi + esi]
 
@@ -111,7 +109,7 @@ fill_map:
   mov [esi + ebx + 3], al
   mov [esi + ebx + 2], ah
   mov [esi + ebx + 1], byte 2
-  mov [esi + ebx], byte '#'
+  mov [esi + ebx], byte 0
   
   add ebx, 4
   cmp ebx, 8000

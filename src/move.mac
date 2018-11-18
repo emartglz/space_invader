@@ -7,6 +7,7 @@ extern move_up
 extern move_down
 extern move_left
 extern move_right
+extern change_direction
 
 %endif
 
@@ -31,6 +32,12 @@ extern move_right
 %macro MOVE_RIGHT 1
   push %1
   call move_right
+  add esp, 4
+%endmacro
+
+%macro CHANGE_DIRECTION 1
+  push %1
+  call change_direction
   add esp, 4
 %endmacro
 

@@ -71,3 +71,21 @@ move_right:
   %undef object
   END
   ret
+
+global change_direction
+change_direction:
+  INI
+  %define object [ebp + 8]
+  mov eax, object
+  cmp byte [eax + 7], 1
+  je decre
+  inc byte [eax + 7]
+  jump:
+  %undef object
+  END
+  ret
+
+  decre:
+  dec byte [eax + 7]
+  dec byte [eax + 7]
+  jmp jump

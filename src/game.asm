@@ -12,7 +12,7 @@ ship resd 2
 alien resd 2
 wallpaper resd 2
 drawables resd 100
-timer_alien resd 1
+timer_alien resd 2
 
 section .text
 
@@ -74,8 +74,9 @@ game:
   mov [wallpaper], dword fill_map
 
   mov [alien], dword paint_alien
-  mov [alien + 4], word 0b000_0110_0000_0110
-  mov [alien + 6], word 0
+  mov [alien + 4], word 0b000_0010_0000_0110
+  mov [alien + 6], byte 0
+  mov [alien + 7], byte 1
 
   mov [ship], dword paint_ship
   mov [ship + 4], word 0b0000_0010_0000_0000
@@ -90,6 +91,16 @@ game:
       xor ebx, ebx
       xor ecx, ecx
       xor edx, edx
+
+
+      push dword 50
+      push timer_alien
+      call delay
+      add esp, 8
+
+      cmp eax, 0
+      jne move_alien
+      move_alien_ret:
 
       REFRESH_MAP map, drawables, 12
 
@@ -124,6 +135,32 @@ game:
 
     jmp game.loop
 
+move_alien:
+  cmp byte [alien + 5], 77
+  je jump_change_direction
+  cmp byte [alien + 5], 2
+  je jump_change_direction
+  jump:
+  cmp byte [alien + 7], 1
+  je jump_move_right
+  cmp byte [alien + 7], 0
+  je jump_move_left
+  ciclo2:
+  xor eax, eax
+  jmp move_alien_ret
+  ret
+  
+  jump_change_direction:
+  CHANGE_DIRECTION alien
+  jmp jump
+
+  jump_move_right:
+  MOVE_RIGHT alien
+  jmp ciclo2
+
+  jump_move_left:
+  MOVE_LEFT alien
+  jmp ciclo2
 
 draw.red:
   FILL_SCREEN BG.RED
