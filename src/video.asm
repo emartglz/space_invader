@@ -26,7 +26,7 @@ clear:
   cld
   rep stosw
   ret
-
+    
 
 ; putc(char chr, byte color, byte r, byte c)
 ;      4         5           6       7

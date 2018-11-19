@@ -1,0 +1,31 @@
+%ifndef MAP_MAC
+%define MAP_MAC
+
+%ifndef MAP_ASM
+
+extern putc
+extern refresh_map
+extern paint_map
+extern fill_map
+extern paint_ship
+extern paint_alien
+
+%endif
+
+%macro PAINT_MAP 1
+  push dword %1
+  call paint_map
+  add esp, 4
+%endmacro
+
+;%1 puntero al mapa, %2 lista de drawables, %3 cuantos son
+%macro REFRESH_MAP 3
+    push dword %1
+    push dword %2
+    push dword %3
+    call refresh_map
+    add esp, 12
+%endmacro
+
+
+%endif
