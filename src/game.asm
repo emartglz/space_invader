@@ -1,10 +1,6 @@
 %include "video.mac"
 %include "keyboard.mac"
 %include "presentation.asm"
-;%include "keyboard.asm"
-
-section .bss
-tecla resb 1
 
 section .bss
 map resb 8000
@@ -45,24 +41,17 @@ extern calibrate
   %%next:
 %endmacro
 
-;1 arriba, 2 derecha, 3 abajo, 4 izquierda
-%macro MOVE 4
-  cmp byte [esp], KEY.UP
-  je %1
-  cmp byte [esp], KEY.RIGHT
-  je %2
-  cmp byte [esp], KEY.DOWN
-  je %3
-  cmp byte [esp], KEY.LEFT
-  je %4
-%endmacro
-
 ; Fill the screen with the given background color
 %macro FILL_SCREEN 1
   push word %1
   call clear
   add esp, 2
 %endmacro
+
+
+
+
+
 
 
 
@@ -73,7 +62,7 @@ game:
   xor ecx, ecx
   xor edx, edx
 
-  
+
   ; Initialize game
 
   FILL_SCREEN BG.BLACK
@@ -82,13 +71,20 @@ game:
   call calibrate
 
   call fill_map
-  
-  mov [ship], word 0b0000_0010_0000_0000
-  mov eax, map + 8
-  mov [ship_map], eax
-  mov eax, [ship_map]
-  ;mov [eax + 1], byte 6
-  ;mov [eax], byte '#'
+
+  mov eax, map
+  push eax
+  call presentation
+  add esp, 4
+
+
+
+  ; mov [ship], word 0b0000_0010_0000_0000
+  ; mov eax, map + 8
+  ; mov [ship_map], eax
+  ; mov eax, [ship_map]
+  ; ;mov [eax + 1], byte 6
+  ; ;mov [eax], byte '#'
 
 
   ; Snakasm main loop
@@ -99,22 +95,18 @@ game:
     .input:
       call get_input
 
-<<<<<<< HEAD
-
-=======
       xor eax, eax
       xor ebx, ebx
       xor ecx, ecx
       xor edx, edx
 
-      call refresh_map
+      ;call refresh_map
 
       xor eax, eax
       xor ebx, ebx
       xor ecx, ecx
       xor edx, edx
-      
->>>>>>> c3827c8fe8f67f7a00cc2b4ade6153d0704a0dc3
+
     ; Main loop.
 
     ; Here is where you will place your game logic.
@@ -122,6 +114,17 @@ game:
     ; declare it extern and use here.
 
     jmp game.loop
+
+
+
+
+
+
+
+
+
+
+
 
 move_up:
   dec byte [ship]
@@ -154,6 +157,9 @@ move_right:
   mov [ship + 1], byte 77
   move_right.next:
   ret
+
+
+
 
 refresh_map:
   mov edx, [ship_map]
@@ -188,24 +194,26 @@ refresh_map:
   mov [edx + 4], byte '*'
   mov [edx +8 + 1], byte 7
   mov [edx + 8], byte ')'
-  
+
   xor eax, eax
   xor ebx, ebx
   xor ecx, ecx
   xor edx, edx
   ret
 
+
+
 fill_map:
   mov ebx, 0
   mov ah, 0
   mov al, 0
 
-  fill_map.jump:  
+  fill_map.jump:
   mov [map + ebx + 3], al
   mov [map + ebx + 2], ah
   mov [map + ebx + 1], byte 2
   mov [map + ebx], byte 0
-  
+
   add ebx, 4
   cmp ebx, 8000
   je fill_map.end
@@ -228,32 +236,14 @@ fill_map:
   xor edx, edx
   ret
 
-fill_map.alien:
-
-
-draw.red:
-  FILL_SCREEN BG.RED
-  ret
-
-
-draw.green:
-  FILL_SCREEN BG.GREEN
-  ret
 
 
 get_input:
     call scan
-    mov edi, tecla
-    stosb
     push ax
     ; The value of the input is on 'word [esp]'
     ;MOVE move_up, move_right, move_down, move_left
     ; Your bindings here
-<<<<<<< HEAD
-    bind KEY.UP, draw.red
-    bind KEY.DOWN, draw.green
-=======
->>>>>>> c3827c8fe8f67f7a00cc2b4ade6153d0704a0dc3
 
     bind KEY.UP, move_up
     bind KEY.DOWN, move_down

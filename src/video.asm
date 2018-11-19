@@ -37,8 +37,4 @@ putc:
 
     mov bx, [esp + 4]
     mov [FBUFFER + eax], bx
-<<<<<<< HEAD
-
-=======
->>>>>>> c3827c8fe8f67f7a00cc2b4ade6153d0704a0dc3
     ret
