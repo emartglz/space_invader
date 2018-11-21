@@ -63,8 +63,8 @@ write:
 
 
 
-    global present
-    present:
+    global pr
+    pr:
         mov eax, 80
         push eax
         push headline

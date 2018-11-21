@@ -9,6 +9,7 @@ extern paint_map
 extern fill_map
 extern paint_ship
 extern paint_alien
+extern paint_shot
 
 %endif
 
