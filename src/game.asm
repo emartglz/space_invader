@@ -10,7 +10,7 @@
 section .bss
 map resb 8000
 ship resd 2
-alien resd 2
+alien resd 20
 shot resd 2
 wallpaper resd 2
 drawables resd 100
@@ -80,19 +80,51 @@ game:
   ; Calibrate the timing
   call calibrate
 
+  mov ecx, 10
+  mov eax, alien
+  mov edx, 256
+  ciclo:
+  mov [eax], dword paint_alien
+  mov [eax + 4], word dx
+  mov [eax + 6], byte 0
+  mov [eax + 7], byte 1
+  add edx, 3
+  add eax, 8
+  loop ciclo
+
+  xor edx, edx
+  xor eax, eax
+
   ;mov [drawables], dword 0
   mov [drawables], dword wallpaper
   mov [drawables + 4], dword ship
-  mov [drawables + 8], dword alien
-  mov [drawables + 12], dword shot
+
+  mov ecx, 10
+  mov edx, drawables
+  add edx, 8
+  mov eax, alien
+  ciclo3:
+  mov [edx + ebx], dword eax
+  add eax, 8
+  add ebx, 4
+  loop ciclo3
+
+  xor eax, eax
+  xor ebx, ebx
+  xor ecx, ecx
+  xor edx, edx
+  ;FILL_SCREEN BG.GREEN
+
+  ;mov [drawables + 8], dword alien
+  mov [drawables + 48], dword shot
   ;mov [drawables + 12], dword paint_ship
 
   mov [wallpaper], dword fill_map
 
-  mov [alien], dword paint_alien
-  mov [alien + 4], word 0b000_0010_0000_0110
-  mov [alien + 6], byte 0
-  mov [alien + 7], byte 1
+  ;mov [alien], dword paint_alien
+  ;mov [alien + 4], word 0b000_0010_0000_0110
+  ;mov [alien + 6], byte 0
+  ;mov [alien + 7], byte 1
 
   mov [ship], dword paint_ship
   mov [ship + 4], word 0b0000_0010_0000_0000
@@ -125,11 +157,13 @@ game:
       call delay
       add esp, 8
 
+      mov ecx, 10
+      mov esi, alien
       cmp eax, 0
       jne move_alien
       move_alien_ret:
 
-      REFRESH_MAP map, drawables, 16
+      REFRESH_MAP map, drawables, 52
 
       ;push map
       ;push dword 0
@@ -188,30 +222,33 @@ move_shot:
   ret
 
 move_alien:
-  cmp byte [alien + 5], 77
+  cmp byte [esi + 5], 77
   je jump_change_direction
-  cmp byte [alien + 5], 2
+  cmp byte [esi + 5], 2
   je jump_change_direction
   jump:
-  cmp byte [alien + 7], 1
+  cmp byte [esi + 7], 1
   je jump_move_right
-  cmp byte [alien + 7], 0
+  cmp byte [esi + 7], 0
   je jump_move_left
+
   ciclo2:
-  xor eax, eax
+  add esi, 8
+  loop move_alien
+  xor esi, esi
   jmp move_alien_ret
   ret
   
   jump_change_direction:
-  CHANGE_DIRECTION alien
+  CHANGE_DIRECTION esi
   jmp jump
 
   jump_move_right:
-  MOVE_RIGHT alien
+  MOVE_RIGHT esi
   jmp ciclo2
 
   jump_move_left:
-  MOVE_LEFT alien
+  MOVE_LEFT esi
   jmp ciclo2
 
 
