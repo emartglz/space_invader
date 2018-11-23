@@ -21,23 +21,34 @@ paint_alien:
 
   mov edx, punt_alien
 
-  mov al, [edx + 6]
-  mov bl, 1
-  cmp al, bl
-  je .end
+  mov bl, [edx + 6]
+  ;mov bl, 1
+  cmp bl, 1
+  je end
   xor eax, eax
   xor ebx, ebx
 
+  mov bl, [edx + 8]
+
   mov al, [edx + 4]
-  mov bl, 80
-  mul bl
-  xor ebx, ebx
-  mov bl, [edx + 4 + 1]
-  add eax, ebx
-  mov ebx, 4
-  mul ebx
+  mov cl, 80
+  mul cl
+  xor ecx, ecx
+  mov cl, [edx + 4 + 1]
+  add eax, ecx
+  mov ecx, 4
+  mul ecx
   add eax, punt_map
 
+  ;xor ebx, ebx
+  ;mov cl, [edx + 8]
+  cmp bl, 1
+  je paint_alien_1
+  cmp bl, 2
+  je paint_alien_2
+  ;jmp end
+
+  paint_alien_1:
   mov [eax + 1], byte 6
   mov [eax], byte 'o'
   mov [eax - 4 + 1], byte 3
@@ -48,8 +59,23 @@ paint_alien:
   mov [eax + 4], byte 'o'
   mov [eax + 8 + 1], byte 8
   mov [eax + 8], byte ')'
+  jmp end
 
-  .end:
+
+  paint_alien_2:
+  mov [eax + 1], byte 7
+  mov [eax], byte 002
+  mov [eax - 4 + 1], byte 4
+  mov [eax - 4], byte '/'
+  mov [eax - 8 + 1], byte 9
+  mov [eax - 8], byte '>'
+  mov [eax + 4 + 1], byte 4
+  mov [eax + 4], byte '\'
+  mov [eax + 8 + 1], byte 9
+  mov [eax + 8], byte '<'
+  jmp end
+
+  end:
   END
   %undef punt_map
   %undef punt_alien

@@ -10,7 +10,7 @@
 section .bss
 map resb 8000
 ship resd 2
-alien resd 20
+alien resd 60
 shot resd 2
 wallpaper resd 2
 drawables resd 100
@@ -82,30 +82,51 @@ game:
 
   mov ecx, 10
   mov eax, alien
-  mov edx, 256
+  mov dl, 3
   ciclo:
   mov [eax], dword paint_alien
-  mov [eax + 4], word dx
+  mov [eax + 4], byte 3
+  mov [eax + 5], dl
   mov [eax + 6], byte 0
   mov [eax + 7], byte 1
-  add edx, 3
-  add eax, 8
+  mov [eax + 8], byte 1
+  add edx, 8
+  add eax, 12
   loop ciclo
 
   xor edx, edx
   xor eax, eax
 
+  mov ecx, 10
+  mov eax, alien
+  add eax, 120
+  mov dl, 3
+  ciclo4:
+  mov [eax], dword paint_alien
+  mov [eax + 4], byte 5
+  mov [eax + 5], dl
+  mov [eax + 6], byte 0
+  mov [eax + 7], byte 1
+  mov [eax + 8], byte 2
+  add edx, 8
+  add eax, 12
+  loop ciclo4
+
+  xor edx, edx
+  xor eax, eax
+
+
   ;mov [drawables], dword 0
   mov [drawables], dword wallpaper
   mov [drawables + 4], dword ship
 
-  mov ecx, 10
+  mov ecx, 20
   mov edx, drawables
   add edx, 8
   mov eax, alien
   ciclo3:
   mov [edx + ebx], dword eax
-  add eax, 8
+  add eax, 12
   add ebx, 4
   loop ciclo3
 
@@ -116,7 +137,7 @@ game:
   ;FILL_SCREEN BG.GREEN
 
   ;mov [drawables + 8], dword alien
-  mov [drawables + 48], dword shot
+  mov [drawables + 88], dword shot
   ;mov [drawables + 12], dword paint_ship
 
   mov [wallpaper], dword fill_map
@@ -127,7 +148,7 @@ game:
   ;mov [alien + 7], byte 1
 
   mov [ship], dword paint_ship
-  mov [ship + 4], word 0b0000_0010_0000_0000
+  mov [ship + 4], word 0b0011_0010_0001_1000
 
   mov [shot], dword paint_shot
   mov [shot + 6], byte 1   ;bool for crashed
@@ -157,13 +178,13 @@ game:
       call delay
       add esp, 8
 
-      mov ecx, 10
+      mov ecx, 20
       mov esi, alien
       cmp eax, 0
       jne move_alien
       move_alien_ret:
 
-      REFRESH_MAP map, drawables, 52
+      REFRESH_MAP map, drawables, 92
 
       ;push map
       ;push dword 0
@@ -233,7 +254,7 @@ move_alien:
   je jump_move_left
 
   ciclo2:
-  add esi, 8
+  add esi, 12
   loop move_alien
   xor esi, esi
   jmp move_alien_ret
@@ -241,6 +262,7 @@ move_alien:
   
   jump_change_direction:
   CHANGE_DIRECTION esi
+  inc byte [esi + 4]
   jmp jump
 
   jump_move_right:

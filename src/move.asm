@@ -79,13 +79,17 @@ change_direction:
   mov eax, object
   cmp byte [eax + 7], 1
   je decre
-  inc byte [eax + 7]
+  cmp byte [eax + 7], 0
+  je cre
   jump:
   %undef object
   END
   ret
 
+  cre:
+  inc byte [eax + 7]
+  jmp jump
+
   decre:
-  dec byte [eax + 7]
   dec byte [eax + 7]
   jmp jump
