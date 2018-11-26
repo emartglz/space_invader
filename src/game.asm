@@ -7,15 +7,22 @@
 ;%include "keyboard.asm"
 
 
+
 section .bss
 map resb 8000
 ship resd 2
 alien resd 60
-shot resd 2
+shots resd 20
+; shots: function to paint
+; shots+4: row, shots+5:col
+; shots + 6: bool for crashed
+; shots + 7:direction of movement(1 up, 0 down)
 wallpaper resd 2
 drawables resd 100
 timer_alien resd 2
 timer_shot resd 2
+
+
 
 
 section .text
@@ -43,6 +50,7 @@ extern delay
   %%next:
 %endmacro
 
+;Only to create the shots of the ship
 %macro bind_shot 1
   cmp byte [esp], %1
   jne %%next
@@ -61,17 +69,19 @@ extern delay
   add esp, 2
 %endmacro
 
+
+
+
+
+
+
+
 global game
 game:
   xor eax, eax
   xor ebx, ebx
   xor ecx, ecx
   xor edx, edx
-
-  ;push map
-  ;push dword 0
-  ;call fill_map
-  ;add esp, 8
 
   ; Initialize game
 
@@ -80,6 +90,7 @@ game:
   ; Calibrate the timing
   call calibrate
 
+;initializing aliens of type 1
   mov ecx, 10
   mov eax, alien
   mov dl, 3
@@ -97,6 +108,7 @@ game:
   xor edx, edx
   xor eax, eax
 
+;initializing aliens of type 2
   mov ecx, 10
   mov eax, alien
   add eax, 120
@@ -116,14 +128,25 @@ game:
   xor eax, eax
 
 
-  ;mov [drawables], dword 0
+;initializing shots
+  mov eax, shots
+  mov ecx, 10
+  init_shots:
+    mov [eax], dword paint_shot
+    mov [eax + 6], byte 1
+    add eax, 8
+    loop init_shots
+
+
   mov [drawables], dword wallpaper
   mov [drawables + 4], dword ship
 
+  ;moving aliens to drawables
   mov ecx, 20
   mov edx, drawables
   add edx, 8
   mov eax, alien
+  mov ebx, 0
   ciclo3:
   mov [edx + ebx], dword eax
   add eax, 12
@@ -134,26 +157,28 @@ game:
   xor ebx, ebx
   xor ecx, ecx
   xor edx, edx
-  ;FILL_SCREEN BG.GREEN
 
-  ;mov [drawables + 8], dword alien
-  mov [drawables + 88], dword shot
-  ;mov [drawables + 12], dword paint_ship
+  ;moving shots to drawables
+  mov eax, shots
+  mov ebx, drawables
+  mov edx, 88
+  mov ecx, 10
+  m_shots:
+  mov [ebx + edx], eax
+  add eax, 8
+  add edx, 4
+  loop m_shots
+
 
   mov [wallpaper], dword fill_map
-
-  ;mov [alien], dword paint_alien
-  ;mov [alien + 4], word 0b000_0010_0000_0110
-  ;mov [alien + 6], byte 0
-  ;mov [alien + 7], byte 1
 
   mov [ship], dword paint_ship
   mov [ship + 4], word 0b0011_0010_0001_1000
 
-  mov [shot], dword paint_shot
-  mov [shot + 6], byte 1   ;bool for crashed
 
-  ; Snakasm main loop
+
+
+  ; Main loop
   game.loop:
 
     .input:
@@ -169,8 +194,8 @@ game:
       call delay
       add esp, 8
       cmp eax, 0
-      jne move_shot
-      move_shot_ret:
+      jne move_shots
+      move_shots_ret:
 
 
       push dword 50
@@ -184,7 +209,7 @@ game:
       jne move_alien
       move_alien_ret:
 
-      REFRESH_MAP map, drawables, 92
+      REFRESH_MAP map, drawables, 128
 
       ;push map
       ;push dword 0
@@ -218,29 +243,77 @@ game:
     jmp game.loop
 
 
-move_shot:
-  cmp byte [shot + 6], 1
-  je finish
-  cmp byte [shot + 7], 1
-  jne alien_shot
-  cmp byte [shot + 4], 0
-  je it_crashed
-  MOVE_UP shot
-  jmp finish
 
-  alien_shot:
-  cmp byte [shot + 4], 24
-  je it_crashed
-  MOVE_DOWN shot
-  jmp finish
 
-  it_crashed:
-  mov byte [shot + 6], 1
 
-  finish:
-  xor eax, eax
-  jmp move_shot_ret
-  ret
+
+move_shots:
+  mov eax, shots
+  mov ecx, 10
+  find:
+  cmp byte [eax + 6], 0
+  jne continue
+  push eax
+  call move_shot
+  add esp, 4
+  continue:
+  add eax, 8
+  loop find
+  jmp move_shots_ret
+
+
+  move_shot:
+    mov ebx, [esp + 4]
+    cmp byte [ebx + 7], 1
+    jne alien_shot
+    cmp byte [ebx + 4], 0
+    je it_crashed
+    MOVE_UP ebx
+    jmp finish
+
+    alien_shot:
+    cmp byte [ebx + 4], 24
+    je it_crashed
+    MOVE_DOWN ebx
+    jmp finish
+
+    it_crashed:
+    mov byte [ebx + 6], 1
+
+    finish:
+    xor ebx, ebx
+    ret
+
+
+; move_shot:
+;   cmp byte [shot + 6], 1
+;   je finish
+;   cmp byte [shot + 7], 1
+;   jne alien_shot
+;   cmp byte [shot + 4], 0
+;   je it_crashed
+;   MOVE_UP shot
+;   jmp finish
+
+;   alien_shot:
+;   cmp byte [shot + 4], 24
+;   je it_crashed
+;   MOVE_DOWN shot
+;   jmp finish
+
+;   it_crashed:
+;   mov byte [shot + 6], 1
+
+;   finish:
+;   xor eax, eax
+;   jmp move_shot_ret
+;   ret
+
+
+
+
+
+
 
 move_alien:
   cmp byte [esi + 5], 77
@@ -274,20 +347,49 @@ move_alien:
   jmp ciclo2
 
 
+
+
+
+
+
+
 ;esp + 4 memory direction of the ship that shot
 ;esp + 8 direction of the shot (1 up, 0 down)
 create_shot:
-  mov eax, [esp + 4]
-  mov ecx, [esp + 8]
-  cmp byte [shot + 6], 1
-  jne .end
-  mov bx, [eax + 4]
-  mov [shot + 4], bx
-  mov [shot + 6], byte 0
-  mov [shot + 7], cl
-
-  .end:
+  mov ecx, 10
+  mov eax, shots
+  find_available_shot:
+  cmp byte [eax + 6], 1
+  je create
+  add eax, 8
+  loop find_available_shot
+  shot_finished:
   ret
+
+  create:
+  mov ebx, [esp + 4]
+  mov ecx, [esp + 8]
+  mov dx, [ebx + 4]
+  mov [eax + 4], dx
+  mov [eax + 6], byte 0
+  mov [eax + 7], cl
+  jmp shot_finished
+
+
+
+  ; mov eax, [esp + 4]
+  ; mov ecx, [esp + 8]
+  ; cmp byte [shot + 6], 1
+  ; jne .end
+  ; mov bx, [eax + 4]
+  ; mov [shot + 4], bx
+  ; mov [shot + 6], byte 0
+  ; mov [shot + 7], cl
+
+  ; .end:
+  ; ret
+
+
 
 
 
