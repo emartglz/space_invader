@@ -7,7 +7,8 @@
 ;%include "keyboard.asm"
 
 section .data
-ship_shots_amount db 10
+ship_shots_amount db 3
+alien_shots_amount db 10
 
 
 
@@ -15,6 +16,8 @@ section .bss
 map resb 8000
 ship resd 2
 alien resd 60
+ship_shots resd 6
+alien_shots resd 20
 shots resd 20
 ; shots: function to paint
 ; shots+4: row, shots+5:col
@@ -57,10 +60,12 @@ extern delay
 %macro bind_shot 1
   cmp byte [esp], %1
   jne %%next
+  push ship_shots_amount
+  push ship_shots
   push dword 1
   push ship
   call create_shot
-  add esp, 8
+  add esp, 16
   %%next:
 %endmacro
 
@@ -131,14 +136,22 @@ game:
   xor eax, eax
 
 
-;initializing shots
-  mov eax, shots
+;initializing ship_shots and alien_shots
+  mov eax, ship_shots
   mov ecx, [ship_shots_amount]
-  init_shots:
+  init_ship_shots:
     mov [eax], dword paint_shot
     mov [eax + 6], byte 1
     add eax, 8
-    loop init_shots
+    loop init_ship_shots
+
+  mov eax, alien_shots
+  mov ecx, [alien_shots_amount]
+  init_alien_shots:
+    mov [eax], dword paint_shot
+    mov [eax + 6], byte 1
+    add eax, 8
+    loop init_alien_shots
 
 
   mov [drawables], dword wallpaper
@@ -162,15 +175,25 @@ game:
   xor edx, edx
 
   ;moving shots to drawables
-  mov eax, shots
+  mov eax, ship_shots
   mov ebx, drawables
   mov edx, 88
   mov ecx, [ship_shots_amount]
-  m_shots:
+  m_ship_shots:
   mov [ebx + edx], eax
   add eax, 8
   add edx, 4
-  loop m_shots
+  loop m_ship_shots
+
+  mov eax, alien_shots
+  mov ebx, drawables
+  mov edx, 100
+  mov ecx, [alien_shots_amount]
+  m_alien_shots:
+  mov [ebx + edx], eax
+  add eax, 8
+  add edx, 4
+  loop m_alien_shots
 
 
   mov [wallpaper], dword fill_map
@@ -197,8 +220,8 @@ game:
       call delay
       add esp, 8
       cmp eax, 0
-      jne move_shots
-      move_shots_ret:
+      jne move_ship_shots
+      move_ship_shots_ret:
 
 
       push dword 50
@@ -212,7 +235,7 @@ game:
       jne move_alien
       move_alien_ret:
 
-      REFRESH_MAP map, drawables, 128
+      REFRESH_MAP map, drawables, 140
 
       PAINT_MAP map
 
@@ -236,19 +259,33 @@ game:
 
 
 
-move_shots:
-  mov eax, shots
+move_ship_shots:
+  mov eax, ship_shots
   mov ecx, [ship_shots_amount]
-  find:
+  find1:
   cmp byte [eax + 6], 0
-  jne continue
+  jne continue1
   push eax
   call move_shot
   add esp, 4
-  continue:
+  continue1:
   add eax, 8
-  loop find
-  jmp move_shots_ret
+  loop find1
+  jmp move_ship_shots_ret
+
+  move_alien_shots:
+  mov eax, alien_shots
+  mov ecx, [alien_shots_amount]
+  find2:
+  cmp byte [eax + 6], 0
+  jne continue2
+  push eax
+  call move_shot
+  add esp, 4
+  continue2:
+  add eax, 8
+  loop find2
+  jmp move_alien_shots_ret
 
 
   move_shot:
@@ -316,9 +353,12 @@ move_alien:
 
 ;esp + 4 memory direction of the ship that shot
 ;esp + 8 direction of the shot (1 up, 0 down)
+;esp + 12 direction of the array of shots
+;esp + 16 length of the array
 create_shot:
-  mov ecx, [ship_shots_amount]
-  mov eax, shots
+  mov ecx, [esp + 16]
+  mov ecx, [ecx]
+  mov eax, [esp + 12]
   find_available_shot:
   cmp byte [eax + 6], 1
   je create
