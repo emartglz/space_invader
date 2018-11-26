@@ -2,6 +2,7 @@
 %include "keyboard.mac"
 %include "map.mac"
 %include "move.mac"
+%include "shot.mac"
 
 ;%include "presentation.asm"
 ;%include "keyboard.asm"
@@ -14,14 +15,14 @@ ship_shots_amount db 10
 section .bss
 map resb 8000
 ship resd 2
-alien resd 60
+alien resd 90
 shots resd 20
 ; shots: function to paint
 ; shots+4: row, shots+5:col
 ; shots + 6: bool for crashed
 ; shots + 7:direction of movement(1 up, 0 down)
 wallpaper resd 2
-drawables resd 100
+drawables resd 42
 timer_alien resd 2
 timer_shot resd 2
 
@@ -30,12 +31,12 @@ timer_shot resd 2
 
 section .text
 
+
 extern clear
 extern putc
 extern scan
 extern calibrate
 extern delay
-
 
 ; Bind a key to a procedure
 %macro bind 2
@@ -130,6 +131,25 @@ game:
   xor edx, edx
   xor eax, eax
 
+;initializing aliens of type 3
+  mov ecx, 10
+  mov eax, alien
+  add eax, 240
+  mov dl, 3
+  ciclo5:
+  mov [eax], dword paint_alien
+  mov [eax + 4], byte 7
+  mov [eax + 5], dl
+  mov [eax + 6], byte 0
+  mov [eax + 7], byte 1
+  mov [eax + 8], byte 3
+  add edx, 8
+  add eax, 12
+  loop ciclo5
+
+  xor edx, edx
+  xor eax, eax  
+
 
 ;initializing shots
   mov eax, shots
@@ -145,7 +165,7 @@ game:
   mov [drawables + 4], dword ship
 
   ;moving aliens to drawables
-  mov ecx, 20
+  mov ecx, 30
   mov edx, drawables
   add edx, 8
   mov eax, alien
@@ -164,7 +184,7 @@ game:
   ;moving shots to drawables
   mov eax, shots
   mov ebx, drawables
-  mov edx, 88
+  mov edx, 128
   mov ecx, [ship_shots_amount]
   m_shots:
   mov [ebx + edx], eax
@@ -199,20 +219,20 @@ game:
       cmp eax, 0
       jne move_shots
       move_shots_ret:
-
+      DESTROY_ALIEN alien, shots
 
       push dword 50
       push timer_alien
       call delay
       add esp, 8
 
-      mov ecx, 20
+      mov ecx, 30
       mov esi, alien
       cmp eax, 0
       jne move_alien
       move_alien_ret:
 
-      REFRESH_MAP map, drawables, 128
+      REFRESH_MAP map, drawables, 168
 
       PAINT_MAP map
 

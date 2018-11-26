@@ -13,6 +13,65 @@
 
 section .text
 
+global destroy_alien
+destroy_alien:
+  INI
+  %define punt_shot [ebp + 8]
+  %define punt_alien [ebp + 12]
+  
+  mov ecx, 10
+  mov eax, punt_shot
+  ciclo:
+    mov dh, [eax + 6]
+    cmp dh, 1
+    je continue1
+    mov ebx, punt_alien
+    mov esi, ecx
+    mov ecx, 30
+    ciclo2:
+      mov dh, [ebx + 6]
+      cmp dh, 1
+      je continue2
+      mov dl, [ebx + 4]
+      cmp dl, [eax + 4]
+      je same_fil
+      same_fil_ret:
+      continue2:
+      add ebx, 12
+    loop ciclo2
+    mov ecx, esi
+    continue1:
+    add eax, 8
+  loop ciclo
+  jmp end
+
+
+  same_fil:
+  mov dl, [ebx + 5]
+  add dl, 2
+  cmp [eax + 5], dl
+  jbe same_fil_correct
+  jmp same_fil_ret
+
+  same_fil_correct:
+  mov dl, [ebx + 5]
+  sub dl, 2
+  cmp [eax + 5], dl
+  jae same_fil_correct2
+  jmp same_fil_ret
+
+  same_fil_correct2:
+  mov [ebx + 6], byte 1
+  mov [eax + 6], byte 1
+  jmp same_fil_ret
+
+
+  end:
+  END
+  %undef punt_shot
+  %undef punt_alien
+  ret
+
 global paint_shot
 paint_shot:
     INI
