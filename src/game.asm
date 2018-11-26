@@ -6,6 +6,9 @@
 ;%include "presentation.asm"
 ;%include "keyboard.asm"
 
+section .data
+ship_shots_amount db 10
+
 
 
 section .bss
@@ -130,7 +133,7 @@ game:
 
 ;initializing shots
   mov eax, shots
-  mov ecx, 10
+  mov ecx, [ship_shots_amount]
   init_shots:
     mov [eax], dword paint_shot
     mov [eax + 6], byte 1
@@ -162,7 +165,7 @@ game:
   mov eax, shots
   mov ebx, drawables
   mov edx, 88
-  mov ecx, 10
+  mov ecx, [ship_shots_amount]
   m_shots:
   mov [ebx + edx], eax
   add eax, 8
@@ -211,20 +214,6 @@ game:
 
       REFRESH_MAP map, drawables, 128
 
-      ;push map
-      ;push dword 0
-      ;call fill_map
-      ;add esp, 8
-
-      ; push map
-      ; push ship
-      ; call paint_ship
-      ; add esp, 8
-
-      ; push map
-      ; call paint_map
-      ; add esp, 4
-
       PAINT_MAP map
 
       ;call draw.green
@@ -249,7 +238,7 @@ game:
 
 move_shots:
   mov eax, shots
-  mov ecx, 10
+  mov ecx, [ship_shots_amount]
   find:
   cmp byte [eax + 6], 0
   jne continue
@@ -283,34 +272,6 @@ move_shots:
     finish:
     xor ebx, ebx
     ret
-
-
-; move_shot:
-;   cmp byte [shot + 6], 1
-;   je finish
-;   cmp byte [shot + 7], 1
-;   jne alien_shot
-;   cmp byte [shot + 4], 0
-;   je it_crashed
-;   MOVE_UP shot
-;   jmp finish
-
-;   alien_shot:
-;   cmp byte [shot + 4], 24
-;   je it_crashed
-;   MOVE_DOWN shot
-;   jmp finish
-
-;   it_crashed:
-;   mov byte [shot + 6], 1
-
-;   finish:
-;   xor eax, eax
-;   jmp move_shot_ret
-;   ret
-
-
-
 
 
 
@@ -356,7 +317,7 @@ move_alien:
 ;esp + 4 memory direction of the ship that shot
 ;esp + 8 direction of the shot (1 up, 0 down)
 create_shot:
-  mov ecx, 10
+  mov ecx, [ship_shots_amount]
   mov eax, shots
   find_available_shot:
   cmp byte [eax + 6], 1
@@ -377,26 +338,10 @@ create_shot:
 
 
 
-  ; mov eax, [esp + 4]
-  ; mov ecx, [esp + 8]
-  ; cmp byte [shot + 6], 1
-  ; jne .end
-  ; mov bx, [eax + 4]
-  ; mov [shot + 4], bx
-  ; mov [shot + 6], byte 0
-  ; mov [shot + 7], cl
-
-  ; .end:
-  ; ret
-
-
-
-
 
 
 get_input:
     call scan
-    ;stosb
     push ax
     ; The value of the input is on 'word [esp]'
     ; Your bindings here
