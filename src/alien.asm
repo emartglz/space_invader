@@ -46,6 +46,8 @@ paint_alien:
   je paint_alien_1
   cmp bl, 2
   je paint_alien_2
+  cmp bl, 3
+  je paint_alien_3
   ;jmp end
 
   paint_alien_1:
@@ -73,6 +75,19 @@ paint_alien:
   mov [eax + 4], byte '\'
   mov [eax + 8 + 1], byte 9
   mov [eax + 8], byte '<'
+  jmp end
+
+  paint_alien_3:
+  mov [eax + 1], byte 15
+  mov [eax], byte 001
+  mov [eax - 4 + 1], byte 14
+  mov [eax - 4], byte '-'
+  mov [eax - 8 + 1], byte 2
+  mov [eax - 8], byte 'V'
+  mov [eax + 4 + 1], byte 14
+  mov [eax + 4], byte '-'
+  mov [eax + 8 + 1], byte 2
+  mov [eax + 8], byte 'V'
   jmp end
 
   end:

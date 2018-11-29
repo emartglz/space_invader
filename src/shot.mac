@@ -1,0 +1,17 @@
+%ifndef SHOT_MAC
+%define SHOT_MAC
+
+%ifndef SHOT_ASM
+
+extern destroy_alien
+
+%endif
+
+%macro DESTROY_ALIEN 2
+ push %1
+ push %2
+ call destroy_alien
+ add esp, 8
+%endmacro
+
+%endif
