@@ -15,6 +15,11 @@ map resb 8000
 ship resd 2
 alien resd 90
 
+living_aliens resd 1
+
+bool_for_random resb 1
+random resd 1
+
 ; shots: function to paint
 ; shots+4: row, shots+5:col
 ; shots + 6: bool for crashed
@@ -24,8 +29,10 @@ alien_shots resd 20
 
 wallpaper resd 2
 drawables resd 45
+
 timer_alien resd 2
 timer_shot resd 2
+timer_alien_shooting resd 2
 
 
 
@@ -38,6 +45,7 @@ extern putc
 extern scan
 extern calibrate
 extern delay
+extern rtcs
 
 ; Bind a key to a procedure
 %macro bind 2
@@ -97,6 +105,9 @@ game:
   ; Calibrate the timing
   call calibrate
 
+  mov [living_aliens], dword 30
+  mov [bool_for_random], byte 1
+
 ;initializing aliens of type 1
   mov ecx, 10
   mov eax, alien
@@ -149,6 +160,7 @@ game:
   add edx, 8
   add eax, 12
   loop ciclo5
+
 
   xor edx, edx
   xor eax, eax
@@ -238,14 +250,14 @@ game:
       xor ecx, ecx
       xor edx, edx
 
-      push dword 25
+      push dword 70
       push timer_shot
       call delay
       add esp, 8
       cmp eax, 0
       jne move_shots
       move_shots_ret:
-      DESTROY_ALIEN alien, ship_shots
+      DESTROY_ALIEN living_aliens, alien, ship_shots, ship_shots_amount
 
       push dword 50
       push timer_alien
@@ -258,6 +270,49 @@ game:
       jne move_alien
       move_alien_ret:
 
+      xor eax, eax
+      xor ebx, ebx
+      xor ecx, ecx
+      xor edx, edx
+
+
+  ; random shots for the aliens
+
+      cmp byte[bool_for_random], 1
+      jne timer
+
+      call rtcs
+      mov [bool_for_random], byte 0
+      mov bl, [living_aliens]
+      div bl
+      mov ebx, 0
+      mov bl, ah
+      mov [random], ebx
+
+      push dword [random]
+      call alien_shooting
+      add esp, 4
+
+      push alien_shots_amount
+      push alien_shots
+      push dword 0
+      push eax
+      call create_shot
+      add esp, 16
+      
+      timer:
+      push dword 1000
+      push timer_alien_shooting
+      call delay
+      add esp, 8
+      cmp eax, 0
+      je continue3
+
+      mov [bool_for_random], byte 1
+
+      continue3:
+
+      
       REFRESH_MAP map, drawables, 180
 
 
@@ -311,7 +366,7 @@ move_shots:
   loop find2
   jmp move_shots_ret
 
-
+;move_shot(esp + 4: direction of the shot to move)
 move_shot:
   push ebp
   mov ebp, esp
@@ -335,7 +390,7 @@ move_shot_up:
   jmp finish
 
 move_shot_down:
-  cmp byte [eax + 5], 24
+  cmp byte [eax + 4], 24
   je it_crashed
   MOVE_DOWN eax
   jmp finish
@@ -399,6 +454,44 @@ move_alien:
   jump_move_left:
   MOVE_LEFT esi
   jmp ciclo2
+
+
+
+
+;alien_shooting(esp + 4: pos of the alien who shot)
+;returns the memory direction of the alien
+alien_shooting:
+  mov ecx, [esp + 4]
+  inc ecx
+  mov eax, alien
+  mov ebx, 0
+  ciclo6:
+    cmp byte [eax + ebx + 6], 0
+    jne continue4
+    dec ecx
+    continue4:
+    add ebx, 12
+    cmp ecx, 0
+    ja ciclo6
+  sub ebx, 12
+  add eax, ebx
+  ret
+
+
+  ; mov ecx, [esp + 4]
+  ; mov eax, alien
+  ; mov ebx, 0
+  ; ciclo6:
+  ;   cmp byte [eax + ebx + 6], 0
+  ;   jne continue4
+  ;   dec ecx
+  ;   continue4:
+  ;   add ebx, 12
+  ;   cmp ecx, 0
+  ;   ja ciclo6
+  ; sub ebx, 12
+  ; add eax, ebx
+  ; ret
 
 
 

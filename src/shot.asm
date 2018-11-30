@@ -11,15 +11,20 @@
   pop ebp
 %endmacro
 
+
 section .text
 
 global destroy_alien
 destroy_alien:
   INI
-  %define punt_shot [ebp + 8]
-  %define punt_alien [ebp + 12]
-  
-  mov ecx, 10
+  %define punt_amount_shots [ebp + 8]
+  %define punt_shot [ebp + 12]
+  %define punt_alien [ebp + 16]
+  %define punt_living_aliens [ebp + 20]
+
+  mov eax, punt_amount_shots
+  mov ecx, 0
+  mov cl, [eax]
   mov eax, punt_shot
   ciclo:
     mov dh, [eax + 6]
@@ -30,12 +35,12 @@ destroy_alien:
     mov ecx, 30
     ciclo2:
       mov dh, [ebx + 6]
-      cmp dh, 1
+      cmp dh, 1 
       je continue2
       mov dl, [ebx + 4]
       cmp dl, [eax + 4]
-      je same_fil
-      same_fil_ret:
+      je same_row
+      same_row_ret:
       continue2:
       add ebx, 12
     loop ciclo2
@@ -46,30 +51,41 @@ destroy_alien:
   jmp end
 
 
-  same_fil:
+  same_row:
   mov dl, [ebx + 5]
   add dl, 2
   cmp [eax + 5], dl
-  jbe same_fil_correct
-  jmp same_fil_ret
+  jbe same_row_correct
+  jmp same_row_ret
 
-  same_fil_correct:
+  same_row_correct:
   mov dl, [ebx + 5]
   sub dl, 2
   cmp [eax + 5], dl
-  jae same_fil_correct2
-  jmp same_fil_ret
+  jae same_row_correct2
+  jmp same_row_ret
 
-  same_fil_correct2:
+  same_row_correct2:
   mov [ebx + 6], byte 1
   mov [eax + 6], byte 1
-  jmp same_fil_ret
+  
+  pusha
+  mov eax, punt_living_aliens
+  mov ebx, 0
+  mov bl, [eax]
+  dec bl
+  mov [eax], bl
+  popa
+
+  jmp same_row_ret
 
 
   end:
   END
   %undef punt_shot
   %undef punt_alien
+  %undef punt_amount_shots
+  %undef punt_living_aliens
   ret
 
 global paint_shot

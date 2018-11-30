@@ -7,11 +7,13 @@ extern destroy_alien
 
 %endif
 
-%macro DESTROY_ALIEN 2
+%macro DESTROY_ALIEN 4
  push %1
  push %2
+ push %3
+ push %4
  call destroy_alien
- add esp, 8
+ add esp, 16
 %endmacro
 
 %endif
