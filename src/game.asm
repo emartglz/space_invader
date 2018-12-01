@@ -301,7 +301,11 @@ game:
       add esp, 16
       
       timer:
-      push dword 1000
+       mov eax, [random]
+       inc eax; just in case random is 0
+       shl eax, 7
+       push eax
+      ;push dword 1000
       push timer_alien_shooting
       call delay
       add esp, 8
