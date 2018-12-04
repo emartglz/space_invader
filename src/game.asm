@@ -15,6 +15,7 @@ ship_shots_amount db 10
 section .bss
 map resb 8000
 ship resd 2
+points resd 2
 alien resd 90
 shots resd 20
 ; shots: function to paint
@@ -22,7 +23,7 @@ shots resd 20
 ; shots + 6: bool for crashed
 ; shots + 7:direction of movement(1 up, 0 down)
 wallpaper resd 2
-drawables resd 42
+drawables resd 50
 timer_alien resd 2
 timer_shot resd 2
 
@@ -105,6 +106,7 @@ game:
   mov [eax + 6], byte 0
   mov [eax + 7], byte 1
   mov [eax + 8], byte 1
+  mov [eax + 9], word 100
   add edx, 8
   add eax, 12
   loop ciclo
@@ -124,6 +126,7 @@ game:
   mov [eax + 6], byte 0
   mov [eax + 7], byte 1
   mov [eax + 8], byte 2
+  mov [eax + 9], word 200
   add edx, 8
   add eax, 12
   loop ciclo4
@@ -143,6 +146,7 @@ game:
   mov [eax + 6], byte 0
   mov [eax + 7], byte 1
   mov [eax + 8], byte 3
+  mov [eax + 9], word 300
   add edx, 8
   add eax, 12
   loop ciclo5
@@ -199,6 +203,9 @@ game:
   mov [ship + 4], word 0b0011_0010_0001_1000
 
 
+  mov [drawables + 168], dword points
+  mov [points], dword paint_points
+  mov [points + 4], dword 0
 
 
   ; Main loop
@@ -219,7 +226,7 @@ game:
       cmp eax, 0
       jne move_shots
       move_shots_ret:
-      DESTROY_ALIEN alien, shots
+      DESTROY_ALIEN points, alien, shots
 
       push dword 50
       push timer_alien
@@ -232,7 +239,11 @@ game:
       jne move_alien
       move_alien_ret:
 
-      REFRESH_MAP map, drawables, 168
+      REFRESH_MAP map, drawables, 43
+      ; push map
+      ; push points
+      ; call paint_points
+      ; add esp, 8
 
       PAINT_MAP map
 

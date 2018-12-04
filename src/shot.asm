@@ -18,6 +18,7 @@ destroy_alien:
   INI
   %define punt_shot [ebp + 8]
   %define punt_alien [ebp + 12]
+  %define punt_points [ebp + 16]
   
   mov ecx, 10
   mov eax, punt_shot
@@ -61,8 +62,18 @@ destroy_alien:
   jmp same_fil_ret
 
   same_fil_correct2:
+  push ecx
+  push edx
+
   mov [ebx + 6], byte 1
   mov [eax + 6], byte 1
+  mov ecx, punt_points
+  xor edx, edx
+  mov dx, word [ebx + 9]
+  add [ecx + 4], edx
+
+  pop edx
+  pop ecx
   jmp same_fil_ret
 
 
@@ -70,6 +81,7 @@ destroy_alien:
   END
   %undef punt_shot
   %undef punt_alien
+  %undef punt_points
   ret
 
 global paint_shot
