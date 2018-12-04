@@ -14,6 +14,108 @@
 
 section .text
 
+
+global destroy_ship
+destroy_ship:
+  INI
+  %define punt_ship [ebp + 8]
+  %define punt_shots [ebp + 12]
+  %define punt_amount_shots [ebp + 16]
+
+  mov edi, punt_ship ; ship
+  cmp byte [edi + 6], 0
+  je finish
+
+  mov edx, punt_amount_shots
+  mov ecx, 0
+  mov cl, [edx] ; amount of shots
+  mov ebx, punt_shots
+
+  ciclo3:
+    cmp byte [ebx + 6], 0
+    jne continue3
+    push dword 0
+    ; mov edx, 0
+    ; mov dx, [ebx + 4] ; row and column of the shot
+    ; push edx
+    ; mov edx, 0
+    ; mov dx, [edi + 4] ; row and column of the ship
+    ; push edx
+    push ebx
+    push edi
+    call destroy
+    add esp, 12
+    cmp eax, 1
+    je it_crashed
+    continue3:
+    add ebx, 8
+  loop ciclo3
+  jmp finish
+
+
+  it_crashed:
+    mov [ebx + 6], byte 1
+    dec byte [edi + 6]
+    cmp byte [edi + 6], 0
+    je finish
+    jmp continue3
+
+  finish:
+    END
+    %undef punt_ship
+    %undef punt_shots
+    %undef punt_amount_shots
+    ret
+
+
+
+
+
+;destroy(pos1, pos2, type)
+;pos1: object to be destroyed
+;pos2: object that destroys
+;type: indicates the kind of object to be destroyed
+;      0 ship
+global destroy
+destroy:
+  mov esi, [esp + 4]
+  mov edx, [esp + 8]
+  mov eax, 0
+  mov al, [edx + 4]
+  cmp [esi + 4], al
+  jne did_not_match
+  mov esi, [esp + 12]
+  cmp dword [esi], 0
+  je destroying_a_ship
+
+  end_destroying:
+  ret
+
+  did_not_match:
+    mov eax, 0
+    jmp end_destroying
+
+  destroying_a_ship:
+    mov al, [esi + 5]
+    mov dl, [edx + 5]
+    sub al, 2
+    cmp al, dl
+    ja did_not_match
+    add al, 4
+    cmp al, dl
+    jb did_not_match
+    mov eax, 1
+    jmp end_destroying
+
+
+
+
+
+
+
+
+
+
 global destroy_alien
 destroy_alien:
   INI
@@ -35,7 +137,7 @@ destroy_alien:
     mov ecx, 30
     ciclo2:
       mov dh, [ebx + 6]
-      cmp dh, 1 
+      cmp dh, 1
       je continue2
       mov dl, [ebx + 4]
       cmp dl, [eax + 4]

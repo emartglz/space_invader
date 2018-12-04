@@ -21,6 +21,11 @@ paint_ship:
   %define punt_ship [ebp + 8]
 
   mov edx, punt_ship
+
+  mov al, [edx + 6]
+  cmp al, 0
+  je end
+
   mov al, [edx + 4]
   mov bl, 80
   mul bl
@@ -42,6 +47,7 @@ paint_ship:
   mov [eax + 8 + 1], byte 7
   mov [eax + 8], byte '>'
 
+end:
   END
 
   %undef punt_map

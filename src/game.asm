@@ -234,7 +234,9 @@ game:
   mov [wallpaper], dword fill_map
 
   mov [ship], dword paint_ship
-  mov [ship + 4], word 0b0011_0010_0001_1000
+  mov [ship + 4], byte 0b0001_1000
+  mov [ship + 5], byte 0b0011_0010
+  mov [ship + 6], byte 1
 
 
 
@@ -258,6 +260,7 @@ game:
       jne move_shots
       move_shots_ret:
       DESTROY_ALIEN living_aliens, alien, ship_shots, ship_shots_amount
+      DESTROY_SHIP alien_shots_amount, alien_shots, ship
 
       push dword 50
       push timer_alien
@@ -316,7 +319,7 @@ game:
 
       continue3:
 
-      
+
       REFRESH_MAP map, drawables, 180
 
 

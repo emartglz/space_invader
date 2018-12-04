@@ -4,6 +4,7 @@
 %ifndef SHOT_ASM
 
 extern destroy_alien
+extern destroy_ship
 
 %endif
 
@@ -14,6 +15,14 @@ extern destroy_alien
  push %4
  call destroy_alien
  add esp, 16
+%endmacro
+
+%macro DESTROY_SHIP 3
+ push %1
+ push %2
+ push %3
+ call destroy_ship
+ add esp, 12
 %endmacro
 
 %endif
