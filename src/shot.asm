@@ -169,6 +169,7 @@ destroy_alien:
   %define punt_shot [ebp + 12]
   %define punt_alien [ebp + 16]
   %define punt_living_aliens [ebp + 20]
+  %define punt_points [ebp + 24]
 
 
   ; mov eax, punt_amount_shots
@@ -260,6 +261,11 @@ destroy_alien:
   mov [eax + 6], byte 1
 
   pusha
+  mov eax, punt_points
+  xor ecx, ecx
+  mov cx, [ebx + 9]
+  add [eax + 4], ecx
+
   mov eax, punt_living_aliens
   dec byte [eax]
   popa

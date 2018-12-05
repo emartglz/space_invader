@@ -8,13 +8,14 @@ extern destroy_ship
 
 %endif
 
-%macro DESTROY_ALIEN 4
+%macro DESTROY_ALIEN 5
  push %1
  push %2
  push %3
  push %4
+ push %5
  call destroy_alien
- add esp, 16
+ add esp, 20
 %endmacro
 
 %macro DESTROY_SHIP 3

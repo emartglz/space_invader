@@ -84,8 +84,7 @@ refresh_map:
     ;add esp, 8
 
     add eax, 4
-    cmp eax, ecx
-    jl .cicle
+    loop .cicle
 
   END
 
