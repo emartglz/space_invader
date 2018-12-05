@@ -14,6 +14,8 @@ section .bss
 map resb 8000
 ship resd 2
 alien resd 90
+points resd 2
+lives resd 2
 
 living_aliens resd 1
 
@@ -28,7 +30,7 @@ ship_shots resd 6
 alien_shots resd 20
 
 wallpaper resd 2
-drawables resd 45
+drawables resd 47
 
 timer_alien resd 2
 timer_shot resd 2
@@ -119,6 +121,7 @@ game:
   mov [eax + 6], byte 0
   mov [eax + 7], byte 1
   mov [eax + 8], byte 1
+  mov [eax + 9], word 300
   add edx, 8
   add eax, 12
   loop ciclo
@@ -138,6 +141,7 @@ game:
   mov [eax + 6], byte 0
   mov [eax + 7], byte 1
   mov [eax + 8], byte 2
+  mov [eax + 9], word 200
   add edx, 8
   add eax, 12
   loop ciclo4
@@ -157,6 +161,7 @@ game:
   mov [eax + 6], byte 0
   mov [eax + 7], byte 1
   mov [eax + 8], byte 3
+  mov [eax + 9], word 100
   add edx, 8
   add eax, 12
   loop ciclo5
@@ -238,6 +243,13 @@ game:
   mov [ship + 5], byte 0b0011_0010
   mov [ship + 6], byte 3
 
+  mov [points], dword paint_points
+  mov [points + 4], dword 0
+  mov [drawables + 180], dword points
+
+  mov [lives], dword paint_lives
+  mov [lives + 4], dword ship
+  mov [drawables + 184], dword lives
 
   xor eax, eax
   xor ebx, ebx
@@ -263,7 +275,7 @@ game:
       cmp eax, 0
       jne move_shots
       move_shots_ret:
-      DESTROY_ALIEN living_aliens, alien, ship_shots, ship_shots_amount
+      DESTROY_ALIEN points, living_aliens, alien, ship_shots, ship_shots_amount
       DESTROY_SHIP alien_shots_amount, alien_shots, ship
 
       push dword 50
@@ -323,7 +335,7 @@ game:
       continue3:
 
 
-      REFRESH_MAP map, drawables, 180
+      REFRESH_MAP map, drawables, 47
 
 
       PAINT_MAP map
