@@ -14,63 +14,6 @@
 
 section .text
 
-
-global destroy_ship
-destroy_ship:
-  INI
-  %define punt_ship [ebp + 8]
-  %define punt_shots [ebp + 12]
-  %define punt_amount_shots [ebp + 16]
-
-  mov edi, punt_ship ; ship
-  cmp byte [edi + 6], 0
-  je finish
-
-  mov edx, punt_amount_shots
-  mov ecx, 0
-  mov cl, [edx] ; amount of shots
-  mov ebx, punt_shots
-
-  ciclo3:
-    cmp byte [ebx + 6], 0
-    jne continue3
-    push dword 0
-    ; mov edx, 0
-    ; mov dx, [ebx + 4] ; row and column of the shot
-    ; push edx
-    ; mov edx, 0
-    ; mov dx, [edi + 4] ; row and column of the ship
-    ; push edx
-    push ebx
-    push edi
-    call destroy
-    add esp, 12
-    cmp eax, 1
-    je it_crashed
-    continue3:
-    add ebx, 8
-  loop ciclo3
-  jmp finish
-
-
-  it_crashed:
-    mov [ebx + 6], byte 1
-    dec byte [edi + 6]
-    cmp byte [edi + 6], 0
-    je finish
-    jmp continue3
-
-  finish:
-    END
-    %undef punt_ship
-    %undef punt_shots
-    %undef punt_amount_shots
-    ret
-
-
-
-
-
 ;destroy(pos1, pos2, type)
 ;pos1: object to be destroyed
 ;pos2: object that destroys
@@ -78,17 +21,20 @@ destroy_ship:
 ;      0 ship
 global destroy
 destroy:
+  push esi
+
   mov esi, [esp + 4]
   mov edx, [esp + 8]
   mov eax, 0
   mov al, [edx + 4]
   cmp [esi + 4], al
   jne did_not_match
-  mov esi, [esp + 12]
-  cmp dword [esi], 0
+  mov eax, [esp + 12]
+  cmp dword [eax], 0
   je destroying_a_ship
 
   end_destroying:
+  pop esi
   ret
 
   did_not_match:
@@ -96,19 +42,119 @@ destroy:
     jmp end_destroying
 
   destroying_a_ship:
+    mov eax, 0
     mov al, [esi + 5]
-    mov dl, [edx + 5]
+    ;mov dl, [edx + 5]
     sub al, 2
-    cmp al, dl
-    ja did_not_match
-    add al, 4
-    cmp al, dl
+    cmp [edx + 5], al
     jb did_not_match
+    add al, 4
+    cmp [edx + 5], al
+    ja did_not_match
     mov eax, 1
     jmp end_destroying
 
 
 
+
+
+
+global destroy_ship
+destroy_ship:
+  INI
+  %define punt_ship [ebp + 8]
+  %define punt_shot [ebp + 12]
+  %define punt_amount_shots [ebp + 16]
+
+  mov ebx, punt_ship
+  mov dh, [ebx + 6]
+  cmp dh, 0
+  je finish
+
+  mov eax, punt_amount_shots
+  mov ecx, 0
+  mov cl, [eax]
+  mov eax, punt_shot
+  ciclo3:
+    mov dh, [eax + 6]
+    cmp dh, 1
+    je continue3
+    mov dl, [ebx + 4]
+    cmp dl, [eax + 4]
+    je same_row1
+    same_row1_ret:
+    continue3:
+    add eax, 8
+  loop ciclo3
+  jmp finish
+
+
+  same_row1:
+  mov dl, [ebx + 5]
+  add dl, 2
+  cmp [eax + 5], dl
+  jbe same_row1_correct
+  jmp same_row1_ret
+
+  same_row1_correct:
+  mov dl, [ebx + 5]
+  sub dl, 2
+  cmp [eax + 5], dl
+  jae same_row1_correct2
+  jmp same_row1_ret
+
+  same_row1_correct2:
+  dec byte [ebx + 6]
+  mov [eax + 6], byte 1
+  cmp byte [ebx + 6], 0
+  je finish
+  jmp same_row1_ret
+
+
+  ; mov edi, punt_ship ; ship
+  ; cmp byte [edi + 6], 0
+  ; je finish
+
+  ; mov edx, punt_amount_shots
+  ; mov ecx, 0
+  ; mov cl, [edx] ; amount of shots
+  ; mov ebx, punt_shots
+
+  ; ciclo3:
+  ;   cmp byte [ebx + 6], 0
+  ;   jne continue3
+  ;   push dword 0
+  ;   ; mov edx, 0
+  ;   ; mov dx, [ebx + 4] ; row and column of the shot
+  ;   ; push edx
+  ;   ; mov edx, 0
+  ;   ; mov dx, [edi + 4] ; row and column of the ship
+  ;   ; push edx
+  ;   push ebx
+  ;   push edi
+  ;   call destroy
+  ;   add esp, 12
+  ;   cmp eax, 1
+  ;   je it_crashed
+  ;   continue3:
+  ;   add ebx, 8
+  ; loop ciclo3
+  ; jmp finish
+
+
+  ; it_crashed:
+  ;   mov [ebx + 6], byte 1
+  ;   dec byte [edi + 6]
+  ;   cmp byte [edi + 6], 0
+  ;   je finish
+  ;   jmp continue3
+
+  finish:
+    END
+    %undef punt_ship
+    %undef punt_shots
+    %undef punt_amount_shots
+    ret
 
 
 
@@ -123,6 +169,48 @@ destroy_alien:
   %define punt_shot [ebp + 12]
   %define punt_alien [ebp + 16]
   %define punt_living_aliens [ebp + 20]
+
+
+  ; mov eax, punt_amount_shots
+  ; mov ecx, 0
+  ; mov cl, [eax]
+  ; mov edi, punt_shot
+  ; ciclo:
+  ;   mov dh, [edi + 6]
+  ;   cmp dh, 1
+  ;   je continue1
+  ;   mov ebx, punt_alien
+  ;   mov esi, ecx
+  ;   mov ecx, 30
+  ;   ciclo2:
+  ;     mov dh, [ebx + 6]
+  ;     cmp dh, 0
+  ;     jne continue2
+  ;     push dword 0
+  ;     push edi
+  ;     push ebx
+  ;     call destroy
+  ;     add esp, 12
+  ;     cmp eax, 1
+  ;     je same_row_correct2
+  ;     continue2:
+  ;     add ebx, 12
+  ;   loop ciclo2
+  ;   mov ecx, esi
+  ;   continue1:
+  ;   add edi, 8
+  ; loop ciclo
+  ; jmp end
+
+  ; same_row_correct2:
+  ; mov [ebx + 6], byte 1
+  ; mov [edi + 6], byte 1
+
+  ; mov eax, punt_living_aliens
+  ; dec byte [eax]
+
+  ; jmp continue2
+
 
   mov eax, punt_amount_shots
   mov ecx, 0
@@ -170,13 +258,10 @@ destroy_alien:
   same_row_correct2:
   mov [ebx + 6], byte 1
   mov [eax + 6], byte 1
-  
+
   pusha
   mov eax, punt_living_aliens
-  mov ebx, 0
-  mov bl, [eax]
-  dec bl
-  mov [eax], bl
+  dec byte [eax]
   popa
 
   jmp same_row_ret

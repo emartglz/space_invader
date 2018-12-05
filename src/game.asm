@@ -236,7 +236,7 @@ game:
   mov [ship], dword paint_ship
   mov [ship + 4], byte 0b0001_1000
   mov [ship + 5], byte 0b0011_0010
-  mov [ship + 6], byte 1
+  mov [ship + 6], byte 10
 
 
 
