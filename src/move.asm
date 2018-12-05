@@ -93,3 +93,35 @@ change_direction:
   decre:
   dec byte [eax + 7]
   jmp jump
+
+global move_diag_right_up
+move_diag_right_up:
+  INI
+  %define object [ebp + 8]
+  mov eax, object
+  cmp byte [eax + 4], 0
+  je fin
+  cmp byte [eax + 5], 79
+  je fin
+  dec byte [eax + 4]
+  inc byte [eax + 5]
+  fin:
+  %undef object
+  END
+  ret
+
+global move_diag_left_up
+move_diag_left_up:
+  INI
+  %define object [ebp + 8]
+  mov eax, object
+  cmp byte [eax + 4], 0
+  je .end
+  cmp byte [eax + 5], 0
+  je .end
+  dec byte [eax + 4]
+  dec byte [eax + 5]
+  .end:
+  %undef object
+  END
+  ret

@@ -63,18 +63,18 @@ extern rtcs
   %%next:
 %endmacro
 
-;Only to create the shots of the ship
-%macro bind_shot 1
-  cmp byte [esp], %1
-  jne %%next
-  push ship_shots_amount
-  push ship_shots
-  push dword 1
-  push ship
-  call create_shot
-  add esp, 16
-  %%next:
-%endmacro
+; ;Only to create the shots of the ship
+; %macro bind_shot 1
+;   cmp byte [esp], %1
+;   jne %%next
+;   push ship_shots_amount
+;   push ship_shots
+;   push dword 1
+;   push ship
+;   call create_shot
+;   add esp, 16
+;   %%next:
+; %endmacro
 
 
 ; Fill the screen with the given background color
@@ -236,7 +236,7 @@ game:
   mov [ship], dword paint_ship
   mov [ship + 4], byte 0b0001_1000
   mov [ship + 5], byte 0b0011_0010
-  mov [ship + 6], byte 10
+  mov [ship + 6], byte 3
 
 
 
@@ -302,13 +302,12 @@ game:
       push eax
       call create_shot
       add esp, 16
-      
+
       timer:
-       mov eax, [random]
-       inc eax; just in case random is 0
-       shl eax, 7
-       push eax
-      ;push dword 1000
+      mov eax, [random]
+      inc eax; just in case random is 0
+      shl eax, 7
+      push eax
       push timer_alien_shooting
       call delay
       add esp, 8
@@ -383,6 +382,10 @@ move_shot:
   je move_shot_up
   cmp byte [eax + 7], 0
   je move_shot_down
+  cmp byte [eax + 7], 2
+  je move_shot_dru
+  cmp byte [eax + 7], 3
+  je move_shot_dlu
 
 finish:
   popa
@@ -402,33 +405,25 @@ move_shot_down:
   MOVE_DOWN eax
   jmp finish
 
+move_shot_dru:
+  cmp byte [eax + 4], 0
+  je it_crashed
+  cmp byte [eax + 5], 79
+  je it_crashed
+  MOVE_DIAG_RIGHT_UP eax
+  jmp finish
+
+move_shot_dlu:
+  cmp byte [eax + 4], 0
+  je it_crashed
+  cmp byte [eax + 5], 0
+  je it_crashed
+  MOVE_DIAG_LEFT_UP eax
+  jmp finish
+
 it_crashed:
   mov byte [eax + 6], 1
   jmp finish
-
-  ; move_shot:
-  ;   mov ebx, [esp + 4]
-  ;   cmp byte [ebx + 7], 1
-  ;   jne alien_shot
-  ;   cmp byte [ebx + 4], 0
-  ;   je it_crashed
-  ;   MOVE_UP ebx
-  ;   jmp finish
-
-  ;   alien_shot:
-  ;   cmp byte [ebx + 4], 24
-  ;   je it_crashed
-  ;   MOVE_DOWN ebx
-  ;   jmp finish
-
-  ;   it_crashed:
-  ;   mov byte [ebx + 6], 1
-
-  ;   finish:
-  ;   xor ebx, ebx
-  ;   ret
-
-
 
 
 move_alien:
@@ -508,7 +503,7 @@ alien_shooting:
 
 
 ;esp + 4 memory direction of the ship that shot
-;esp + 8 direction of the shot (1 up, 0 down)
+;esp + 8 direction of the shot (0 down, 1 up, 2 diag-right-up, 3 diag-left-up)
 ;esp + 12 direction of the array of shots
 ;esp + 16 length of the array
 create_shot:
@@ -535,7 +530,46 @@ create_shot:
 
 
 
+the_ship_shot:
+  cmp byte [ship + 6], 0
+  je .end
+  push ship_shots_amount
+  push ship_shots
+  push dword 1
+  push ship
+  call create_shot
+  add esp, 16
+  .end:
+  ret
 
+
+ultrashot:
+  cmp byte [ship + 6], 0
+  je .end
+  ;shot that goes up
+  push ship_shots_amount
+  push ship_shots
+  push dword 1
+  push ship
+  call create_shot
+  add esp, 16
+  ;shot that goes to the right and up in diagonal direction
+  push ship_shots_amount
+  push ship_shots
+  push dword 2
+  push ship
+  call create_shot
+  add esp, 16
+  ;shot that goes to the left and up in diagonal direction
+  push ship_shots_amount
+  push ship_shots
+  push dword 3
+  push ship
+  call create_shot
+  add esp, 16
+
+  .end:
+  ret
 
 get_input:
     call scan
@@ -548,7 +582,11 @@ get_input:
     bind_move KEY.RIGHT, MOVE_RIGHT, ship
     bind_move KEY.LEFT, MOVE_LEFT, ship
 
-    bind_shot KEY.Spc
+    bind KEY.Spc, the_ship_shot
+    bind KEY.Q, ultrashot
+
+    ;bind_shot KEY.Spc
+    ;bind_ultrashot KEY.Q
 
     add esp, 2 ; free the stack
 

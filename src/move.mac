@@ -8,6 +8,8 @@ extern move_down
 extern move_left
 extern move_right
 extern change_direction
+extern move_diag_right_up
+extern move_diag_left_up
 
 %endif
 
@@ -38,6 +40,18 @@ extern change_direction
 %macro CHANGE_DIRECTION 1
   push %1
   call change_direction
+  add esp, 4
+%endmacro
+
+%macro MOVE_DIAG_RIGHT_UP 1
+  push %1
+  call move_diag_right_up
+  add esp, 4
+%endmacro
+
+%macro MOVE_DIAG_LEFT_UP 1
+  push %1
+  call move_diag_left_up
   add esp, 4
 %endmacro
 
