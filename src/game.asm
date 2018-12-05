@@ -603,6 +603,11 @@ ultrashot:
   ultrashot_end:
   ret
 
+add_lives:
+  add [ship + 6], byte 3
+  ret
+
+
 get_input:
     call scan
     push ax
@@ -616,6 +621,8 @@ get_input:
 
     bind KEY.Spc, the_ship_shot
     bind KEY.Q, ultrashot
+
+    bind KEY.1, add_lives
 
     ;bind_shot KEY.Spc
     ;bind_ultrashot KEY.Q
