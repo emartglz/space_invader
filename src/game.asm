@@ -239,6 +239,10 @@ game:
   mov [ship + 6], byte 3
 
 
+  xor eax, eax
+  xor ebx, ebx
+  xor ecx, ecx
+  xor edx, edx
 
 
   ; Main loop
@@ -545,7 +549,23 @@ the_ship_shot:
 
 ultrashot:
   cmp byte [ship + 6], 0
-  je .end
+  je ultrashot_end
+  mov dl, 3
+  mov cl, [ship_shots_amount]
+  mov eax, ship_shots
+  yes:
+    cmp byte [eax + 6], 1
+    jne .continue
+    dec dl
+    cmp dl, 0
+    je yes_end
+    .continue:
+    add eax, 8
+  loop yes
+  cmp dl, 0
+  jne ultrashot_end
+  yes_end:
+
   ;shot that goes up
   push ship_shots_amount
   push ship_shots
@@ -568,7 +588,7 @@ ultrashot:
   call create_shot
   add esp, 16
 
-  .end:
+  ultrashot_end:
   ret
 
 get_input:
