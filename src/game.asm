@@ -22,6 +22,10 @@ living_aliens resd 1
 bool_for_random resb 1
 random resd 1
 
+;0 easy, 1 medium, 2 hard
+;3 crazy_aliens, 4 space_shooter, 5 arcade
+mode resb 1
+
 ; shots: function to paint
 ; shots+4: row, shots+5:col
 ; shots + 6: bool for crashed
@@ -64,19 +68,6 @@ extern rtcs
   %2 %3
   %%next:
 %endmacro
-
-; ;Only to create the shots of the ship
-; %macro bind_shot 1
-;   cmp byte [esp], %1
-;   jne %%next
-;   push ship_shots_amount
-;   push ship_shots
-;   push dword 1
-;   push ship
-;   call create_shot
-;   add esp, 16
-;   %%next:
-; %endmacro
 
 
 ; Fill the screen with the given background color
@@ -196,7 +187,7 @@ game:
   mov [drawables], dword wallpaper
   mov [drawables + 4], dword ship
 
-  ;moving aliens to drawables
+;moving aliens to drawables
   mov ecx, 30
   mov edx, drawables
   add edx, 8
@@ -214,7 +205,7 @@ game:
   xor edx, edx
 
 
-  ;moving shots to drawables
+;moving shots to drawables
   mov eax, ship_shots
   mov ebx, drawables
   mov edx, 128
@@ -257,7 +248,7 @@ game:
   xor edx, edx
 
 
-  ; Main loop
+; Main loop
   game.loop:
 
     .input:
@@ -269,16 +260,18 @@ game:
       xor edx, edx
 
       push dword 70
+      ;push dword 1000
       push timer_shot
       call delay
       add esp, 8
       cmp eax, 0
       jne move_shots
       move_shots_ret:
+      ;DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship_shots
       DESTROY_ALIEN points, living_aliens, alien, ship_shots, ship_shots_amount
       DESTROY_SHIP alien_shots_amount, alien_shots, ship
 
-      push dword 50
+      push dword 500
       push timer_alien
       call delay
       add esp, 8
@@ -286,7 +279,8 @@ game:
       mov ecx, 30
       mov esi, alien
       cmp eax, 0
-      jne move_alien
+      ;jne move_alien
+      jne move_alien_randomly
       move_alien_ret:
 
       xor eax, eax
@@ -388,8 +382,8 @@ move_shots:
   loop find2
   jmp move_shots_ret
 
-;move_shot(esp + 4: direction of the shot to move)
-move_shot:
+  ;move_shot(esp + 4: direction of the shot to move)
+  move_shot:
   push ebp
   mov ebp, esp
   pusha
@@ -403,25 +397,25 @@ move_shot:
   cmp byte [eax + 7], 3
   je move_shot_dlu
 
-finish:
+  finish:
   popa
   mov esp, ebp
   pop ebp
   ret
 
-move_shot_up:
+  move_shot_up:
   cmp byte [eax + 4], 0
   je it_crashed
   MOVE_UP eax
   jmp finish
 
-move_shot_down:
+  move_shot_down:
   cmp byte [eax + 4], 24
   je it_crashed
   MOVE_DOWN eax
   jmp finish
 
-move_shot_dru:
+  move_shot_dru:
   cmp byte [eax + 4], 0
   je it_crashed
   cmp byte [eax + 5], 79
@@ -429,7 +423,7 @@ move_shot_dru:
   MOVE_DIAG_RIGHT_UP eax
   jmp finish
 
-move_shot_dlu:
+  move_shot_dlu:
   cmp byte [eax + 4], 0
   je it_crashed
   cmp byte [eax + 5], 0
@@ -437,11 +431,12 @@ move_shot_dlu:
   MOVE_DIAG_LEFT_UP eax
   jmp finish
 
-it_crashed:
+  it_crashed:
   mov byte [eax + 6], 1
   jmp finish
 
 
+;moving aliens in a line
 move_alien:
   cmp byte [esi + 5], 77
   je jump_change_direction
@@ -472,6 +467,71 @@ move_alien:
   jump_move_left:
   MOVE_LEFT esi
   jmp ciclo2
+
+
+
+
+;moving aliens randomly
+; esi pointer to aliens
+; ecx total amount of aliens
+move_alien_randomly:
+  xor eax, eax
+  xor ebx, ebx
+  mov bl, 4
+  call rtcs
+
+  foreach:
+    cmp byte [esi + 6], 1
+    je continue5
+    div bl
+    cmp ah, 0
+    je try_move_down
+    cmp ah, 1
+    je try_move_up
+    cmp ah, 2
+    je try_move_right
+    cmp ah, 3
+    je try_move_left
+    continue5:
+    add esi, 12
+  loop foreach
+
+  jmp move_alien_ret
+
+  try_move_down:
+    cmp byte [esi + 4], 22
+    je not_possible_down
+    MOVE_DOWN esi
+    jmp continue5
+    not_possible_down:
+    jmp try_move_up
+
+  try_move_up:
+    cmp byte [esi + 4], 1
+    je not_possible_up
+    MOVE_UP esi
+    jmp continue5
+    not_possible_up:
+    jmp try_move_right
+
+  try_move_right:
+    cmp byte [esi + 5], 77
+    je not_possible_right
+    MOVE_RIGHT esi
+    jmp continue5
+    not_possible_right:
+    jmp try_move_left
+
+  try_move_left:
+    cmp byte [esi + 5], 2
+    je not_possible_left
+    MOVE_LEFT esi
+    jmp continue5
+    not_possible_left:
+    jmp try_move_down
+
+
+
 
 
 
@@ -623,9 +683,6 @@ get_input:
     bind KEY.Q, ultrashot
 
     bind KEY.1, add_lives
-
-    ;bind_shot KEY.Spc
-    ;bind_ultrashot KEY.Q
 
     add esp, 2 ; free the stack
 

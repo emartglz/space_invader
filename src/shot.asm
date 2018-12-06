@@ -59,6 +59,73 @@ destroy:
 
 
 
+
+global destroy_shots
+destroy_shots:
+ INI
+ %define punt_ship_shots [ebp + 8]
+ %define punt_alien_shots [ebp + 12]
+ %define punt_amount_ship_shots [ebp + 16]
+ %define punt_amount_alien_shots [ebp + 20]
+ %define punt_points [ebp + 24]
+
+  mov eax, punt_amount_ship_shots
+  mov ecx, 0
+  mov cl, [eax]
+  mov edi, punt_ship_shots
+  ciclo4:
+    mov dh, [edi + 6]
+    cmp dh, 1
+    je continue4
+    mov ebx, punt_alien_shots
+    mov esi, ecx
+    mov eax, punt_amount_alien_shots
+    mov ecx, 0
+    mov cl, [eax]
+    ciclo5:
+      mov dh, [ebx + 6]
+      cmp dh, 1
+      je continue5
+      mov dx, [ebx + 4]
+      cmp dx, [edi + 4]
+      je it_matched
+      continue5:
+      add ebx, 12
+    loop ciclo5
+    mov ecx, esi
+    continue4:
+    add edi, 8
+  loop ciclo4
+  jmp end_destroy_shots
+
+
+  it_matched:
+  mov [ebx + 6], byte 1
+  mov [edi + 6], byte 1
+
+  pusha
+  mov eax, punt_points
+  mov ecx, 15
+  add [eax + 4], ecx
+  popa
+
+  jmp continue5
+
+  end_destroy_shots:
+  END
+  %undef punt_alien_shots
+  %undef punt_ship_shots
+  %undef punt_amount_alien_shots
+  %undef punt_amount_ship_shots
+  %undef punt_points
+  ret
+
+
+
+
+
+
+
 global destroy_ship
 destroy_ship:
   INI
