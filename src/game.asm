@@ -477,20 +477,23 @@ move_alien:
 move_alien_randomly:
   xor eax, eax
   xor ebx, ebx
-  mov bl, 4
-  call rtcs
+  xor edx, edx
+  mov ebx, 4
+  rdtsc
+  ;mov eax, 736546
+  xor edx, edx
 
   foreach:
     cmp byte [esi + 6], 1
     je continue5
-    div bl
-    cmp ah, 0
+    div ebx
+    cmp edx, 0
     je try_move_down
-    cmp ah, 1
+    cmp edx, 1
     je try_move_up
-    cmp ah, 2
+    cmp edx, 2
     je try_move_right
-    cmp ah, 3
+    cmp edx, 3
     je try_move_left
     continue5:
     add esi, 12
@@ -512,7 +515,7 @@ move_alien_randomly:
     MOVE_UP esi
     jmp continue5
     not_possible_up:
-    jmp try_move_right
+    jmp try_move_down
 
   try_move_right:
     cmp byte [esi + 5], 77
@@ -520,7 +523,7 @@ move_alien_randomly:
     MOVE_RIGHT esi
     jmp continue5
     not_possible_right:
-    jmp try_move_left
+    jmp try_move_down
 
   try_move_left:
     cmp byte [esi + 5], 2
@@ -664,7 +667,10 @@ ultrashot:
   ret
 
 add_lives:
+  cmp byte [ship + 6], 10
+  jae .end
   add [ship + 6], byte 3
+  .end:
   ret
 
 
