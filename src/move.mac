@@ -7,11 +7,25 @@ extern move_up
 extern move_down
 extern move_left
 extern move_right
+extern move_up_cartel
+extern move_down_cartel
 extern change_direction
 extern move_diag_right_up
 extern move_diag_left_up
 
 %endif
+
+%macro MOVE_UP_CARTEL 1
+  push %1
+  call move_up_cartel
+  add esp, 4
+%endmacro
+
+%macro MOVE_DOWN_CARTEL 1
+  push %1
+  call move_down_cartel
+  add esp, 4
+%endmacro
 
 %macro MOVE_UP 1
   push %1

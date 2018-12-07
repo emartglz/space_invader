@@ -7,6 +7,32 @@
 section .data
 ship_shots_amount db 3
 alien_shots_amount db 10
+cartel db "\
+@******************************************************************************@\
+*                                                                              *\
+*                                                                              *\
+*    ************   ************  ***********   ***********   ***********      *\
+*    *              *          *  *         *   *             *                *\
+*    *              *          *  *         *   *             *                *\
+*    *              *          *  *         *   *             *                *\
+*    ************   ************  ***********   *             ***********      *\
+*               *   *             *         *   *             *                *\
+*               *   *             *         *   *             *                *\
+*               *   *             *         *   *             *                *\
+*    ************   *             *         *   ***********   ***********      *\
+*                                                                              *\
+*                                                                              *\
+*                                  EPILEPSIA                                   *\
+*                                                                              *\
+*                                 NORMAL  GAME                                 *\
+*                                                                              *\
+*                                 CRAZY  MODE                                  *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+@******************************************************************************@", 0
 
 
 
@@ -16,6 +42,12 @@ ship resd 2
 alien resd 90
 points resd 2
 lives resd 2
+
+ini_fill_screen resd 2
+index_cartel resd 2
+ini_wallpaper resd 3
+ini_drawables resd 5
+index resd 1
 
 living_aliens resd 1
 
@@ -39,8 +71,9 @@ drawables resd 47
 timer_alien resd 2
 timer_shot resd 2
 timer_alien_shooting resd 2
+timer_wallpaper_ini resd 2
 
-
+game_start resb 1
 
 
 section .text
@@ -97,6 +130,53 @@ game:
 
   ; Calibrate the timing
   call calibrate
+
+  mov [game_start], byte 0
+
+  mov [ini_fill_screen], dword fill_map
+
+  mov [ini_wallpaper], dword fill_ini_screen
+  mov [ini_wallpaper + 4], dword cartel
+  mov [ini_wallpaper + 8], byte 1
+
+  mov [index_cartel], dword paint_cartel
+  mov [index_cartel + 4], dword index
+  mov [index], byte 16
+  mov [index + 1], byte 16
+  mov [index + 2], byte 20
+
+  mov [ini_drawables], dword ini_fill_screen
+  mov [ini_drawables + 4], dword index_cartel
+  mov [ini_drawables + 8], dword ini_wallpaper
+
+  intro_game_loop:
+  call get_input_first_screen
+
+  cmp [game_start], byte 1
+  je game_loop_beging
+
+  push dword 1000
+  push timer_wallpaper_ini
+  call delay
+  cmp eax, 0
+  jne change_wallpaper_ini
+  ret_change_walpaper_ini:
+
+  add esp, 8
+
+  REFRESH_MAP map, ini_drawables, 3
+  PAINT_MAP map
+
+  jmp intro_game_loop
+  game_loop_beging:
+
+  xor eax, eax
+  xor ebx, ebx
+  xor ecx, ecx
+  xor edx, edx
+  xor esi, esi
+  xor edi, edi
+
 
   mov [living_aliens], dword 30
   mov [bool_for_random], byte 1
@@ -267,11 +347,11 @@ game:
       cmp eax, 0
       jne move_shots
       move_shots_ret:
-      ;DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship_shots
+      DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship_shots
       DESTROY_ALIEN points, living_aliens, alien, ship_shots, ship_shots_amount
       DESTROY_SHIP alien_shots_amount, alien_shots, ship
 
-      push dword 500
+      push dword 200
       push timer_alien
       call delay
       add esp, 8
@@ -279,8 +359,8 @@ game:
       mov ecx, 30
       mov esi, alien
       cmp eax, 0
-      ;jne move_alien
-      jne move_alien_randomly
+      jne decide_game_mode
+      
       move_alien_ret:
 
       xor eax, eax
@@ -349,8 +429,23 @@ game:
 
     jmp game.loop
 
+decide_game_mode:
+  cmp [index], byte 16
+    je move_alien
+  cmp [index], byte 18
+    je move_alien_randomly
 
 
+change_wallpaper_ini:
+  inc byte [ini_wallpaper + 8]
+  cmp byte [ini_wallpaper + 8], 16
+  je  mod_16
+  ret_mod_16:
+  jmp ret_change_walpaper_ini
+
+mod_16:
+  mov [ini_wallpaper + 8], byte 1
+  jmp ret_mod_16
 
 
 
@@ -477,20 +572,20 @@ move_alien:
 move_alien_randomly:
   xor eax, eax
   xor ebx, ebx
-  mov bl, 4
+  mov bl, 2
   call rtcs
 
   foreach:
     cmp byte [esi + 6], 1
     je continue5
     div bl
+    ;cmp ah, 0
+    ;je try_move_down
+    ;cmp ah, 1
+    ;je try_move_up
     cmp ah, 0
-    je try_move_down
-    cmp ah, 1
-    je try_move_up
-    cmp ah, 2
     je try_move_right
-    cmp ah, 3
+    cmp ah, 1
     je try_move_left
     continue5:
     add esi, 12
@@ -520,7 +615,7 @@ move_alien_randomly:
     MOVE_RIGHT esi
     jmp continue5
     not_possible_right:
-    jmp try_move_left
+    jmp try_move_down
 
   try_move_left:
     cmp byte [esi + 5], 2
@@ -666,7 +761,20 @@ ultrashot:
 add_lives:
   add [ship + 6], byte 3
   ret
+enter_game:
+  mov [game_start], byte 1
+  ret
 
+get_input_first_screen:
+  call scan
+  push ax
+
+  bind_move KEY.UP, MOVE_UP_CARTEL, index
+  bind_move KEY.DOWN, MOVE_DOWN_CARTEL, index
+  bind KEY.ENTER, enter_game
+  add esp, 2
+
+  ret
 
 get_input:
     call scan

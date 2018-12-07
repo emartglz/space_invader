@@ -16,6 +16,34 @@
 
 
 section.text
+global move_up_cartel
+move_up_cartel:
+  INI
+  %define object [ebp + 8]
+  mov eax, object
+  mov bl, [eax + 1]
+  cmp [eax], bl
+  je next_up
+  sub byte [eax], 2
+  next_up:
+  %undef object
+  END
+  ret
+
+global move_down_cartel
+move_down_cartel:
+  INI
+  %define object [ebp + 8]
+  mov eax, object
+  mov bl, [eax + 2]
+  cmp [eax], bl
+  je next_down
+  add byte [eax], 2
+  next_down:
+  %undef object
+  END
+  ret
+
 global move_up
 move_up:
   INI
