@@ -89,8 +89,11 @@ destroy_shots:
       mov dx, [ebx + 4]
       cmp dx, [edi + 4]
       je it_matched
+      inc dl
+      cmp dx, [edi + 4]
+      je it_matched
       continue5:
-      add ebx, 12
+      add ebx, 8
     loop ciclo5
     mov ecx, esi
     continue4:
@@ -105,7 +108,7 @@ destroy_shots:
 
   pusha
   mov eax, punt_points
-  mov ecx, 15
+  mov ecx, 20
   add [eax + 4], ecx
   popa
 

@@ -13,6 +13,8 @@ extern paint_shot
 extern paint_lives
 extern paint_points
 extern paint_ship2
+extern paint_cartel
+extern fill_ini_screen
 
 %endif
 

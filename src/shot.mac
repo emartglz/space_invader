@@ -33,7 +33,7 @@ extern destroy_shots
  push %3
  push %4
  push %5
- call destroy_alien
+ call destroy_shots
  add esp, 20
 %endmacro
 
