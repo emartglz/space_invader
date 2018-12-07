@@ -53,3 +53,46 @@ end:
   %undef punt_map
   %undef punt_ship
   ret
+
+
+
+
+global paint_ship2
+paint_ship2:
+  INI
+  %define punt_map [ebp + 12]
+  %define punt_ship [ebp + 8]
+
+  mov edx, punt_ship
+
+  mov al, [edx + 6]
+  cmp al, 0
+  je finish
+
+  mov al, [edx + 4]
+  mov bl, 80
+  mul bl
+  xor ebx, ebx
+  mov bl, [edx + 4 + 1]
+  add eax, ebx
+  mov ebx, 4
+  mul ebx
+  add eax, punt_map
+
+  mov [eax + 1], byte 4
+  mov [eax], byte '6'
+  mov [eax - 4 + 1], byte 4
+  mov [eax - 4], byte '/'
+  mov [eax - 8 + 1], byte 6
+  mov [eax - 8], byte '<'
+  mov [eax + 4 + 1], byte 4
+  mov [eax + 4], byte '\'
+  mov [eax + 8 + 1], byte 6
+  mov [eax + 8], byte '>'
+
+  finish:
+  END
+
+  %undef punt_map
+  %undef punt_ship
+  ret

@@ -7,12 +7,14 @@
 section .data
 ship_shots_amount db 3
 alien_shots_amount db 10
+aliens_amount dd 30
 
 
 
 section .bss
 map resb 8000
 ship resd 2
+ship2 resd 2
 alien resd 90
 points resd 2
 lives resd 2
@@ -24,6 +26,7 @@ random resd 1
 
 ;0 easy, 1 medium, 2 hard
 ;3 crazy_aliens, 4 space_shooter, 5 arcade
+;6 two players
 mode resb 1
 
 ; shots: function to paint
@@ -34,7 +37,7 @@ ship_shots resd 6
 alien_shots resd 20
 
 wallpaper resd 2
-drawables resd 47
+drawables resd 48
 
 timer_alien resd 2
 timer_shot resd 2
@@ -234,6 +237,11 @@ game:
   mov [ship + 5], byte 0b0011_0010
   mov [ship + 6], byte 3
 
+  mov [ship2], dword paint_ship2
+  mov [ship2 + 4], byte 0b0001_1000
+  mov [ship2 + 5], byte 0b0001_0100
+  mov [ship2 + 6], byte 3
+
   mov [points], dword paint_points
   mov [points + 4], dword 0
   mov [drawables + 180], dword points
@@ -241,6 +249,8 @@ game:
   mov [lives], dword paint_lives
   mov [lives + 4], dword ship
   mov [drawables + 184], dword lives
+
+  mov [drawables + 188], dword ship2
 
   xor eax, eax
   xor ebx, ebx
@@ -271,7 +281,7 @@ game:
       DESTROY_ALIEN points, living_aliens, alien, ship_shots, ship_shots_amount
       DESTROY_SHIP alien_shots_amount, alien_shots, ship
 
-      push dword 500
+      push dword 250
       push timer_alien
       call delay
       add esp, 8
@@ -283,6 +293,19 @@ game:
       jne move_alien_randomly
       move_alien_ret:
 
+      ; cmpcmp byte [mode], 5
+      ; jne continue6
+      ; cmp eax, 0
+      ; jne generate_alienscmp byte [mode], 5
+      ; jne continue6
+      ; cmp eax, 0
+      ; jne generate_aliens byte [mode], 5
+      ; jne continue6
+      ; cmp eax, 0
+      ; jne generate_aliens
+
+
+      continue6:
       xor eax, eax
       xor ebx, ebx
       xor ecx, ecx
@@ -294,13 +317,20 @@ game:
       cmp byte[bool_for_random], 1
       jne timer
 
-      call rtcs
+      rdtsc
+      xor edx, edx
       mov [bool_for_random], byte 0
+      xor ebx, ebx
       mov bl, [living_aliens]
-      div bl
-      mov ebx, 0
-      mov bl, ah
-      mov [random], ebx
+      div ebx
+      mov [random], edx
+      ; call rtcs
+      ; mov [bool_for_random], byte 0
+      ; mov bl, [living_aliens]
+      ; div bl
+      ; mov ebx, 0
+      ; mov bl, ah
+      ; mov [random], ebx
 
       push dword [random]
       call alien_shooting
@@ -314,10 +344,11 @@ game:
       add esp, 16
 
       timer:
-      mov eax, [random]
-      inc eax; just in case random is 0
-      shl eax, 7
-      push eax
+      ; mov eax, [random]
+      ; inc eax; just in case random is 0
+      ; shl eax, 7
+      ;push eax
+      push dword 1000
       push timer_alien_shooting
       call delay
       add esp, 8
@@ -329,7 +360,7 @@ game:
       continue3:
 
 
-      REFRESH_MAP map, drawables, 47
+      REFRESH_MAP map, drawables, 48
 
 
       PAINT_MAP map
@@ -351,6 +382,9 @@ game:
 
 
 
+
+generate_aliens:
+  
 
 
 
@@ -437,7 +471,10 @@ move_shots:
 
 
 ;moving aliens in a line
+;esi aliens
+;ecx amount of aliens
 move_alien:
+  ;pusha
   cmp byte [esi + 5], 77
   je jump_change_direction
   cmp byte [esi + 5], 2
@@ -452,6 +489,7 @@ move_alien:
   add esi, 12
   loop move_alien
   xor esi, esi
+  ;popa
   jmp move_alien_ret
   ret
 
@@ -475,6 +513,7 @@ move_alien:
 ; esi pointer to aliens
 ; ecx total amount of aliens
 move_alien_randomly:
+  ;pusha
   xor eax, eax
   xor ebx, ebx
   xor edx, edx
@@ -499,6 +538,7 @@ move_alien_randomly:
     add esi, 12
   loop foreach
 
+  ;popa
   jmp move_alien_ret
 
   try_move_down:

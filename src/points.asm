@@ -22,13 +22,13 @@ paint_points:
     mov ebx, punt_points
     mov esi, punt_map
 
-    mov [esi], byte 'P'
-    mov [esi + 4], byte 'O'
-    mov [esi + 8], byte 'I'
-    mov [esi + 12], byte 'N'
-    mov [esi + 16], byte 'T'
-    mov [esi + 20], byte 'S'
-    mov [esi + 24], byte ':'
+    mov [esi], byte 'S'
+    mov [esi + 4], byte 'C'
+    mov [esi + 8], byte 'O'
+    mov [esi + 12], byte 'R'
+    mov [esi + 16], byte 'E'
+    mov [esi + 20], byte ':'
+    ;mov [esi + 24], byte ':'
 
     mov eax, [ebx + 4]
     mov ebx, 10
