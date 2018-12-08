@@ -58,7 +58,7 @@ random resd 1
 
 ;0 easy, 1 medium, 2 hard
 ;3 crazy_aliens, 4 space_shooter, 5 arcade
-;6 two players
+;6 two players, 7 mirror_mode
 mode resb 1
 
 ; shots: function to paint
@@ -183,6 +183,7 @@ game:
 
   mov [living_aliens], dword 30
   mov [bool_for_random], byte 1
+  mov [mode], byte 5
 
 ;initializing aliens of type 1
   mov ecx, 10
@@ -315,12 +316,21 @@ game:
   mov [ship], dword paint_ship
   mov [ship + 4], byte 0b0001_1000
   mov [ship + 5], byte 0b0011_0010
+
+  cmp byte [mode], 1
+  je easy_mode_lives
   mov [ship + 6], byte 3
+  easy_mode_ret:
+
 
   mov [ship2], dword paint_ship2
   mov [ship2 + 4], byte 0b0001_1000
   mov [ship2 + 5], byte 0b0001_0100
+
+  cmp byte [mode], 6 ; checking if it is the two_players mode
+  jne not_multiplayer
   mov [ship2 + 6], byte 3
+  not_multiplayer:
 
   mov [points], dword paint_points
   mov [points + 4], dword 0
@@ -350,7 +360,6 @@ game:
       xor edx, edx
 
       push dword 70
-      ;push dword 1000
       push timer_shot
       call delay
       add esp, 8
@@ -369,21 +378,14 @@ game:
       mov ecx, 30
       mov esi, alien
       cmp eax, 0
-      jne decide_game_mode
-      
+      jne decide_alien_movement
+
       move_alien_ret:
 
-      ; cmpcmp byte [mode], 5
-      ; jne continue6
-      ; cmp eax, 0
-      ; jne generate_alienscmp byte [mode], 5
-      ; jne continue6
-      ; cmp eax, 0
-      ; jne generate_aliens byte [mode], 5
-      ; jne continue6
-      ; cmp eax, 0
-      ; jne generate_aliens
-
+      cmp byte [mode], 5
+      jne continue6
+      cmp eax, 0
+      jne generate_aliens
 
       continue6:
       xor eax, eax
@@ -460,7 +462,7 @@ game:
 
     jmp game.loop
 
-decide_game_mode:
+decide_alien_movement:
   cmp [index], byte 16
     je move_alien
   cmp [index], byte 18
@@ -474,13 +476,30 @@ change_wallpaper_ini:
   ret_mod_16:
   jmp ret_change_walpaper_ini
 
-mod_16:
+  mod_16:
   mov [ini_wallpaper + 8], byte 1
   jmp ret_mod_16
 
-generate_aliens:
-  
 
+; generate aliens so the game will never end
+generate_aliens:
+  mov ecx, [aliens_amount]
+  mov edi, alien
+  ciclo7:
+    cmp byte [edi + 6], 0
+    je continue7
+    rdtsc
+    xor edx, edx
+    mov ebx, 75
+    div ebx
+    mov [edi + 4], byte 1
+    mov [edi + 5], dl
+    mov [edi + 6], byte 0
+    inc dword [living_aliens]
+    continue7:
+    add edi, 12
+    loop ciclo7
+  jmp continue6
 
 
 move_shots:
@@ -569,7 +588,6 @@ move_shots:
 ;esi aliens
 ;ecx amount of aliens
 move_alien:
-  ;pusha
   cmp byte [esi + 5], 77
   je jump_change_direction
   cmp byte [esi + 5], 2
@@ -584,7 +602,6 @@ move_alien:
   add esi, 12
   loop move_alien
   xor esi, esi
-  ;popa
   jmp move_alien_ret
   ret
 
@@ -608,13 +625,12 @@ move_alien:
 ; esi pointer to aliens
 ; ecx total amount of aliens
 move_alien_randomly:
-  ;pusha
+  pusha
   xor eax, eax
   xor ebx, ebx
   xor edx, edx
   mov ebx, 4
   rdtsc
-  ;mov eax, 736546
   xor edx, edx
 
   foreach:
@@ -633,7 +649,7 @@ move_alien_randomly:
     add esi, 12
   loop foreach
 
-  ;popa
+  popa
   jmp move_alien_ret
 
   try_move_down:
@@ -801,15 +817,27 @@ ultrashot:
   ultrashot_end:
   ret
 
+
 add_lives:
   cmp byte [ship + 6], 10
   jae .end
   add [ship + 6], byte 3
   .end:
   ret
+
+
+
+easy_mode_lives:
+  mov [ship + 6], byte 5
+  jmp easy_mode_ret
+
+
+
 enter_game:
   mov [game_start], byte 1
   ret
+
+
 
 get_input_first_screen:
   call scan
