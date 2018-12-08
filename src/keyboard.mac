@@ -8,6 +8,11 @@
 %define KEY.ENTER 0x1C
 %define KEY.Spc   0x39
 %define KEY.Q     0x10
+%define KEY.W     0x11
+%define KEY.S     0x1F
+%define KEY.D     0x20
+%define KEY.A     0x1E
+%define KEY.E     0x12
 %define KEY.1     0x02
 
 %endif ; KEYBOARD_MAC

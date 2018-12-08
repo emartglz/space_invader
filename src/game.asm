@@ -66,10 +66,11 @@ mode resb 1
 ; shots + 6: bool for crashed
 ; shots + 7:direction of movement(1 up, 0 down)
 ship_shots resd 6
+ship2_shots resd 6
 alien_shots resd 20
 
 wallpaper resd 2
-drawables resd 48
+drawables resd 51
 
 timer_alien resd 2
 timer_shot resd 2
@@ -183,7 +184,7 @@ game:
 
   mov [living_aliens], dword 30
   mov [bool_for_random], byte 1
-  mov [mode], byte 1
+  mov [mode], byte 2
 
 ;initializing aliens of type 1
   mov ecx, 10
@@ -248,11 +249,15 @@ game:
 
 ;initializing ship_shots and alien_shots
   mov eax, ship_shots
+  mov ebx, ship2_shots
   mov cl, [ship_shots_amount]
   init_ship_shots:
     mov [eax], dword paint_shot
+    mov [ebx], dword paint_shot
     mov [eax + 6], byte 1
+    mov [ebx + 6], byte 1
     add eax, 8
+    add ebx, 8
     loop init_ship_shots
 
   xor ecx, ecx
@@ -300,9 +305,18 @@ game:
   add edx, 4
   loop m_ship_shots
 
-  mov ecx, 0
+  mov eax, ship2_shots
+  mov ebx, drawables
+  xor ecx, ecx
+  mov cl, [ship_shots_amount]
+  m_ship2_shots:
+  mov [ebx + edx], eax
+  add eax, 8
+  add edx, 4
+  loop m_ship2_shots
+
+  xor ecx, ecx
   mov eax, alien_shots
-  ;mov edx, 140
   mov cl, [alien_shots_amount]
   m_alien_shots:
   mov [ebx + edx], eax
@@ -325,13 +339,13 @@ game:
 
   mov [points], dword paint_points
   mov [points + 4], dword 0
-  mov [drawables + 180], dword points
+  mov [drawables + 192], dword points
 
   mov [lives], dword paint_lives
   mov [lives + 4], dword ship
-  mov [drawables + 184], dword lives
+  mov [drawables + 196], dword lives
 
-  mov [drawables + 188], dword ship2
+  mov [drawables + 200], dword ship2
 
   xor eax, eax
   xor ebx, ebx
@@ -358,8 +372,11 @@ game:
       jne move_shots
       move_shots_ret:
       DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship_shots
+      DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship2_shots
       DESTROY_ALIEN points, living_aliens, alien, ship_shots, ship_shots_amount
+      DESTROY_ALIEN points, living_aliens, alien, ship2_shots, ship_shots_amount
       DESTROY_SHIP alien_shots_amount, alien_shots, ship
+      DESTROY_SHIP alien_shots_amount, alien_shots, ship2
 
       xor eax, eax
       call decide_aliens_velocity
@@ -421,7 +438,7 @@ game:
       continue3:
 
 
-      REFRESH_MAP map, drawables, 48
+      REFRESH_MAP map, drawables, 51
 
 
       PAINT_MAP map
@@ -495,6 +512,19 @@ move_shots:
   continue1:
   add eax, 8
   loop find1
+
+  mov eax, ship2_shots
+  mov ecx, 0
+  mov cl, [ship_shots_amount]
+  find3:
+  cmp byte [eax + 6], 0
+  jne continue8
+  push eax
+  call move_shot
+  add esp, 4
+  continue8:
+  add eax, 8
+  loop find3
 
   mov eax, alien_shots
   mov ecx, 0
@@ -752,6 +782,19 @@ the_ship_shot:
   .end:
   ret
 
+;this function will only be called in the two_players mode
+the_ship2_shot:
+  cmp byte [ship2 + 6], 0
+  je .end
+  push ship_shots_amount
+  push ship2_shots
+  push dword 1
+  push ship2
+  call create_shot
+  add esp, 16
+  .end:
+  ret
+
 ; Special weapon
 ultrashot:
   cmp byte [ship + 6], 0
@@ -970,6 +1013,19 @@ get_input:
     bind KEY.Q, ultrashot
 
     bind KEY.1, add_lives
+
+    cmp byte [mode], 6
+    jne not_two_players_mode
+
+    ;this will only happen if it is two_players mode
+    bind_move KEY.W, MOVE_UP, ship2
+    bind_move KEY.S, MOVE_DOWN, ship2
+    bind_move KEY.D, MOVE_RIGHT, ship2
+    bind_move KEY.A, MOVE_LEFT, ship2
+
+    bind KEY.E, the_ship2_shot
+
+    not_two_players_mode:
 
     add esp, 2 ; free the stack
 
