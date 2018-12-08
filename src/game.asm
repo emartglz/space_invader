@@ -183,7 +183,7 @@ game:
 
   mov [living_aliens], dword 30
   mov [bool_for_random], byte 1
-  mov [mode], byte 5
+  mov [mode], byte 1
 
 ;initializing aliens of type 1
   mov ecx, 10
@@ -317,20 +317,11 @@ game:
   mov [ship + 4], byte 0b0001_1000
   mov [ship + 5], byte 0b0011_0010
 
-  cmp byte [mode], 1
-  je easy_mode_lives
-  mov [ship + 6], byte 3
-  easy_mode_ret:
-
-
   mov [ship2], dword paint_ship2
   mov [ship2 + 4], byte 0b0001_1000
   mov [ship2 + 5], byte 0b0001_0100
 
-  cmp byte [mode], 6 ; checking if it is the two_players mode
-  jne not_multiplayer
-  mov [ship2 + 6], byte 3
-  not_multiplayer:
+  call decide_mode_lives
 
   mov [points], dword paint_points
   mov [points + 4], dword 0
@@ -370,7 +361,9 @@ game:
       DESTROY_ALIEN points, living_aliens, alien, ship_shots, ship_shots_amount
       DESTROY_SHIP alien_shots_amount, alien_shots, ship
 
-      push dword 200
+      xor eax, eax
+      call decide_aliens_velocity
+      push eax
       push timer_alien
       call delay
       add esp, 8
@@ -379,15 +372,10 @@ game:
       mov esi, alien
       cmp eax, 0
       jne decide_alien_movement
-
       move_alien_ret:
 
-      cmp byte [mode], 5
-      jne continue6
-      cmp eax, 0
-      jne generate_aliens
+      call infinite_move
 
-      continue6:
       xor eax, eax
       xor ebx, ebx
       xor ecx, ecx
@@ -406,13 +394,6 @@ game:
       mov bl, [living_aliens]
       div ebx
       mov [random], edx
-      ; call rtcs
-      ; mov [bool_for_random], byte 0
-      ; mov bl, [living_aliens]
-      ; div bl
-      ; mov ebx, 0
-      ; mov bl, ah
-      ; mov [random], ebx
 
       push dword [random]
       call alien_shooting
@@ -426,11 +407,9 @@ game:
       add esp, 16
 
       timer:
-      ; mov eax, [random]
-      ; inc eax; just in case random is 0
-      ; shl eax, 7
-      ;push eax
-      push dword 1000
+      xor eax, eax
+      call timer_for_shooting
+      push eax
       push timer_alien_shooting
       call delay
       add esp, 8
@@ -462,6 +441,7 @@ game:
 
     jmp game.loop
 
+; the movement of the aliens depend on the chosen mode
 decide_alien_movement:
   cmp [index], byte 16
     je move_alien
@@ -499,7 +479,7 @@ generate_aliens:
     continue7:
     add edi, 12
     loop ciclo7
-  jmp continue6
+  jmp generate_aliens_ret
 
 
 move_shots:
@@ -759,7 +739,7 @@ create_shot:
   jmp shot_finished
 
 
-
+;this function is only called when our ship was the one who shot
 the_ship_shot:
   cmp byte [ship + 6], 0
   je .end
@@ -772,7 +752,7 @@ the_ship_shot:
   .end:
   ret
 
-
+; Special weapon
 ultrashot:
   cmp byte [ship + 6], 0
   je ultrashot_end
@@ -817,7 +797,7 @@ ultrashot:
   ultrashot_end:
   ret
 
-
+;this is for cheating
 add_lives:
   cmp byte [ship + 6], 10
   jae .end
@@ -827,10 +807,135 @@ add_lives:
 
 
 
-easy_mode_lives:
-  mov [ship + 6], byte 5
-  jmp easy_mode_ret
+decide_mode_lives:
+  cmp byte [mode], 0 ; easy mode
+  je easy_lives
+  cmp byte [mode], 1 ; medium mode
+  je medium_lives
+  cmp byte [mode], 2 ; hard mode
+  je hard_lives
+  cmp byte [mode], 3 ; crazy aliens mode
+  je medium_lives
+  cmp byte [mode], 4 ; space_shooter
+  je medium_lives
+  cmp byte [mode], 5 ; arcade mode
+  je medium_lives
+  cmp byte [mode], 6 ; two players mode
+  je two_players_lives
+  cmp byte [mode], 7 ; mirror mode
+  je medium_lives
+  .end:
+  ret
 
+  easy_lives:
+  mov [ship + 6], byte 5
+  jmp decide_mode_lives.end
+
+  medium_lives:
+  mov [ship + 6], byte 3
+  jmp decide_mode_lives.end
+
+  hard_lives:
+  mov [ship + 6], byte 1
+  jmp decide_mode_lives.end
+
+  two_players_lives:
+  mov [ship + 6], byte 3
+  mov [ship2 + 6], byte 3
+
+
+decide_aliens_velocity:
+  cmp byte [mode], 0 ; easy mode
+  je easy_velocity
+  cmp byte [mode], 1 ; medium mode
+  je medium_velocity
+  cmp byte [mode], 2 ; hard mode
+  je hard_velocity
+  cmp byte [mode], 3 ; crazy aliens mode
+  je medium_velocity
+  cmp byte [mode], 4 ; space_shooter
+  je easy_velocity
+  cmp byte [mode], 5 ; arcade mode
+  je easy_velocity
+  cmp byte [mode], 6 ; two players mode
+  je easy_velocity
+  cmp byte [mode], 7 ; mirror mode
+  je medium_velocity
+  .end:
+  ret
+
+  easy_velocity:
+  mov eax, 250
+  jmp decide_aliens_velocity.end
+
+  medium_velocity:
+  mov eax, 250
+  cmp dword [living_aliens], 20
+  ja .continue
+  mov eax, 100
+  cmp dword [living_aliens], 8
+  ja .continue
+  mov eax, 50
+  cmp dword [living_aliens], 3
+  ja .continue
+  mov eax, 25
+  .continue:
+  jmp decide_aliens_velocity.end
+
+  hard_velocity:
+  mov eax, 50
+  cmp dword [living_aliens], 8
+  ja .continue
+  mov eax, 25
+  .continue:
+  jmp decide_aliens_velocity.end
+
+
+timer_for_shooting:
+  cmp byte [mode], 0 ; easy mode
+  je easy_shot
+  cmp byte [mode], 1 ; medium mode
+  je easy_shot
+  cmp byte [mode], 2 ; hard mode
+  je hard_shot
+  cmp byte [mode], 3 ; crazy aliens mode
+  je hard_shot
+  cmp byte [mode], 4 ; space_shooter
+  je easy_shot
+  cmp byte [mode], 5 ; arcade mode
+  je easy_shot
+  cmp byte [mode], 6 ; two players mode
+  je hard_shot
+  cmp byte [mode], 7 ; mirror mode
+  je hard_shot
+  .end:
+  ret
+
+  easy_shot:
+  mov eax, 1000
+  jmp timer_for_shooting.end
+
+  hard_shot:
+  mov eax, [random]
+  inc eax; just in case random is 0
+  shl eax, 7
+  jmp timer_for_shooting.end
+
+
+
+infinite_move:
+ cmp byte [mode], 5
+ je infinite_mode
+ cmp byte [mode], 4
+ je infinite_mode
+ .end:
+ ret
+
+ infinite_mode:
+ cmp eax, 0
+ jne generate_aliens
+ generate_aliens_ret:
+ jmp infinite_move.end
 
 
 enter_game:
