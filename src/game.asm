@@ -369,7 +369,7 @@ game:
       call delay
       add esp, 8
       cmp eax, 0
-      jne move_shots
+      jne move_all_shots
       move_shots_ret:
       DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship_shots
       DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship2_shots
@@ -499,115 +499,12 @@ generate_aliens:
   jmp generate_aliens_ret
 
 
-move_shots:
-  mov eax, ship_shots
-  mov ecx, 0
-  mov cl, [ship_shots_amount]
-  find1:
-  cmp byte [eax + 6], 0
-  jne continue1
-  push eax
-  call move_shot
-  add esp, 4
-  continue1:
-  add eax, 8
-  loop find1
-
-  mov eax, ship2_shots
-  mov ecx, 0
-  mov cl, [ship_shots_amount]
-  find3:
-  cmp byte [eax + 6], 0
-  jne continue8
-  push eax
-  call move_shot
-  add esp, 4
-  continue8:
-  add eax, 8
-  loop find3
-
-  mov eax, alien_shots
-  mov ecx, 0
-  mov cl, [alien_shots_amount]
-  find2:
-  cmp byte [eax + 6], 0
-  jne continue2
-  push eax
-  call move_shot
-  add esp, 4
-  continue2:
-  add eax, 8
-  loop find2
+move_all_shots:
+  MOVE_SHOTS alien_shots_amount, alien_shots
+  MOVE_SHOTS ship_shots_amount, ship2_shots
+  MOVE_SHOTS ship_shots_amount, ship_shots
   jmp move_shots_ret
 
-  ;move_shot(esp + 4: direction of the shot to move)
-  move_shot:
-  push ebp
-  mov ebp, esp
-  pusha
-  mov eax, [ebp + 8]
-  cmp byte [eax + 7], 1
-  je move_shot_up
-  cmp byte [eax + 7], 0
-  je move_shot_down
-  cmp byte [eax + 7], 2
-  je move_shot_dru
-  cmp byte [eax + 7], 3
-  je move_shot_dlu
-  cmp byte [eax + 7], 4
-  je move_shot_right
-  cmp byte [eax + 7], 5
-  je move_shot_left
-
-  finish:
-  popa
-  mov esp, ebp
-  pop ebp
-  ret
-
-  move_shot_up:
-  cmp byte [eax + 4], 0
-  je it_crashed
-  MOVE_UP eax
-  jmp finish
-
-  move_shot_down:
-  cmp byte [eax + 4], 24
-  je it_crashed
-  MOVE_DOWN eax
-  jmp finish
-
-  move_shot_dru:
-  cmp byte [eax + 4], 0
-  je it_crashed
-  cmp byte [eax + 5], 79
-  je it_crashed
-  MOVE_DIAG_RIGHT_UP eax
-  jmp finish
-
-  move_shot_dlu:
-  cmp byte [eax + 4], 0
-  je it_crashed
-  cmp byte [eax + 5], 0
-  je it_crashed
-  MOVE_DIAG_LEFT_UP eax
-  jmp finish
-
-  move_shot_right:
-  cmp byte [eax + 5], 77
-  je it_crashed
-  MOVE_RIGHT eax
-  jmp finish
-
-  move_shot_left:
-  cmp byte [eax + 5], 2
-  je it_crashed
-  MOVE_LEFT eax
-  jmp finish
-
-  it_crashed:
-  mov byte [eax + 6], 1
-  jmp finish
 
 
 ;moving aliens in a line

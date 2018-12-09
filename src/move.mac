@@ -12,6 +12,7 @@ extern move_down_cartel
 extern change_direction
 extern move_diag_right_up
 extern move_diag_left_up
+extern move_shots
 
 %endif
 
@@ -67,6 +68,13 @@ extern move_diag_left_up
   push %1
   call move_diag_left_up
   add esp, 4
+%endmacro
+
+%macro MOVE_SHOTS 2
+  push %1
+  push %2
+  call move_shots
+  add esp, 8
 %endmacro
 
 %endif
