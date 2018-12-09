@@ -34,6 +34,32 @@ cartel db "\
 *                                                                              *\
 *                                                                              *\
 @******************************************************************************@", 0
+cartel_game_over db "\
+@******************************************************************************@\
+*                                                                              *\
+*                                                                              *\
+*           ***********   ***********   *         *   ***********              *\
+*           *             *         *   **       **   *                        *\
+*           *             *         *   *  *   *  *   *                        *\
+*           *             *         *   *    *    *   *                        *\
+*           *    ******   ***********   *         *   ***********              *\
+*           *         *   *         *   *         *   *                        *\
+*           *         *   *         *   *         *   *                        *\
+*           ***********   *         *   *         *   ***********              *\
+*                                                                              *\
+*           ***********   *         *   ***********   ***********              *\
+*           *         *   *         *   *             *         *              *\
+*           *         *   *         *   *             *         *              *\
+*           *         *   *         *   *             *         *              *\
+*           *         *     *     *     ***********   ***********              *\
+*           *         *      *   *      *             *       *                *\
+*           *         *       * *       *             *        *               *\
+*           ***********        *        ***********   *         *              *\
+*                                                                              *\
+*                                                                              *\
+*                        PRESIONE ENTER PARA REINICIAR                         *\
+*                                                                              *\
+@******************************************************************************@", 0
 
 
 
@@ -50,6 +76,9 @@ index_cartel resd 2
 ini_wallpaper resd 3
 ini_drawables resd 5
 index resd 1
+
+end_wallpaper resd 3
+end_drawables resd 5
 
 living_aliens resd 1
 
@@ -75,6 +104,7 @@ timer_alien resd 2
 timer_shot resd 2
 timer_alien_shooting resd 2
 timer_wallpaper_ini resd 2
+timer_wallpaper_end resd 2
 
 game_start resb 1
 
@@ -361,6 +391,9 @@ game:
       DESTROY_ALIEN points, living_aliens, alien, ship_shots, ship_shots_amount
       DESTROY_SHIP alien_shots_amount, alien_shots, ship
 
+      cmp [ship + 6], byte 0
+      je game_over_screen
+
       push dword 200
       push timer_alien
       call delay
@@ -460,23 +493,61 @@ game:
 
     jmp game.loop
 
+game_over_screen:
+  mov [ini_fill_screen], dword fill_map
+  mov [end_wallpaper], dword fill_ini_screen
+  mov [end_wallpaper + 4], dword cartel_game_over
+  mov [end_wallpaper + 8], byte 1
+  mov [end_drawables], dword ini_fill_screen
+  mov [end_drawables + 4], dword end_wallpaper
+
+  game_over_screen_loop:
+  call get_input_game_over_screen
+  cmp [game_start], byte 0
+  je game
+
+  push dword 1000
+  push dword timer_wallpaper_end
+  call delay
+  cmp eax, 0
+  jne change_wallpaper_end
+  ret_change_walpaper_end:
+
+  add esp, 8
+
+  REFRESH_MAP map, end_drawables, 2
+  PAINT_MAP map
+
+  jmp game_over_screen_loop
+
 decide_game_mode:
   cmp [index], byte 16
     je move_alien
   cmp [index], byte 18
     je move_alien_randomly
 
+change_wallpaper_end:
+  inc byte [end_wallpaper + 8]
+  cmp byte [end_wallpaper + 8], 16
+  je  mod_16_end
+  ret_mod_16_end:
+  jmp ret_change_walpaper_end
+
+
+mod_16_end:
+  mov [end_wallpaper + 8], byte 1
+  jmp ret_mod_16_end
 
 change_wallpaper_ini:
   inc byte [ini_wallpaper + 8]
   cmp byte [ini_wallpaper + 8], 16
-  je  mod_16
-  ret_mod_16:
+  je  mod_16_ini
+  ret_mod_16_ini:
   jmp ret_change_walpaper_ini
 
-mod_16:
+mod_16_ini:
   mov [ini_wallpaper + 8], byte 1
-  jmp ret_mod_16
+  jmp ret_mod_16_ini
 
 generate_aliens:
   
@@ -807,8 +878,23 @@ add_lives:
   add [ship + 6], byte 3
   .end:
   ret
+
 enter_game:
   mov [game_start], byte 1
+  ret
+
+restart_game:
+ mov [game_start], byte 0
+ ret
+
+
+get_input_game_over_screen:
+  call scan
+  push ax
+
+  bind KEY.ENTER,  restart_game
+
+  add esp, 2
   ret
 
 get_input_first_screen:
