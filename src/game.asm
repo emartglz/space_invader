@@ -64,7 +64,7 @@ mode resb 1
 ; shots: function to paint
 ; shots+4: row, shots+5:col
 ; shots + 6: bool for crashed
-; shots + 7:direction of movement(1 up, 0 down)
+; shots + 7:direction of movement(0 down, 1 up, 2 dru, 3 dlu, 4 right, 5 left)
 ship_shots resd 6
 ship2_shots resd 6
 alien_shots resd 20
@@ -184,7 +184,7 @@ game:
 
   mov [living_aliens], dword 30
   mov [bool_for_random], byte 1
-  mov [mode], byte 2
+  mov [mode], byte 4
 
 ;initializing aliens of type 1
   mov ecx, 10
@@ -554,6 +554,10 @@ move_shots:
   je move_shot_dru
   cmp byte [eax + 7], 3
   je move_shot_dlu
+  cmp byte [eax + 7], 4
+  je move_shot_right
+  cmp byte [eax + 7], 5
+  je move_shot_left
 
   finish:
   popa
@@ -587,6 +591,18 @@ move_shots:
   cmp byte [eax + 5], 0
   je it_crashed
   MOVE_DIAG_LEFT_UP eax
+  jmp finish
+
+  move_shot_right:
+  cmp byte [eax + 5], 77
+  je it_crashed
+  MOVE_RIGHT eax
+  jmp finish
+
+  move_shot_left:
+  cmp byte [eax + 5], 2
+  je it_crashed
+  MOVE_LEFT eax
   jmp finish
 
   it_crashed:
@@ -782,6 +798,42 @@ the_ship_shot:
   .end:
   ret
 
+the_ship_shot_down:
+  cmp byte [ship + 6], 0
+  je .end
+  push ship_shots_amount
+  push ship_shots
+  push dword 0
+  push ship
+  call create_shot
+  add esp, 16
+  .end:
+  ret
+
+the_ship_shot_left:
+  cmp byte [ship + 6], 0
+  je .end
+  push ship_shots_amount
+  push ship_shots
+  push dword 5
+  push ship
+  call create_shot
+  add esp, 16
+  .end:
+  ret
+
+the_ship_shot_right:
+  cmp byte [ship + 6], 0
+  je .end
+  push ship_shots_amount
+  push ship_shots
+  push dword 4
+  push ship
+  call create_shot
+  add esp, 16
+  .end:
+  ret
+
 ;this function will only be called in the two_players mode
 the_ship2_shot:
   cmp byte [ship2 + 6], 0
@@ -946,7 +998,7 @@ timer_for_shooting:
   cmp byte [mode], 4 ; space_shooter
   je easy_shot
   cmp byte [mode], 5 ; arcade mode
-  je easy_shot
+  je arcade_shot
   cmp byte [mode], 6 ; two players mode
   je hard_shot
   cmp byte [mode], 7 ; mirror mode
@@ -962,6 +1014,10 @@ timer_for_shooting:
   mov eax, [random]
   inc eax; just in case random is 0
   shl eax, 7
+  jmp timer_for_shooting.end
+
+  arcade_shot:
+  mov eax, 500
   jmp timer_for_shooting.end
 
 
@@ -1009,9 +1065,20 @@ get_input:
     bind_move KEY.RIGHT, MOVE_RIGHT, ship
     bind_move KEY.LEFT, MOVE_LEFT, ship
 
-    bind KEY.Spc, the_ship_shot
-    bind KEY.Q, ultrashot
+    cmp byte [mode], 4
+    jne not_space_shooter_mode
+    bind KEY.W, the_ship_shot
+    bind KEY.S, the_ship_shot_down
+    bind KEY.D, the_ship_shot_right
+    bind KEY.A, the_ship_shot_left
+    jmp it_was_ss_mode
 
+
+    not_space_shooter_mode:
+    bind KEY.Spc, the_ship_shot
+
+    it_was_ss_mode:
+    bind KEY.Q, ultrashot
     bind KEY.1, add_lives
 
     cmp byte [mode], 6
