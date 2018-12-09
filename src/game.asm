@@ -184,7 +184,7 @@ game:
 
   mov [living_aliens], dword 30
   mov [bool_for_random], byte 1
-  mov [mode], byte 4
+  mov [mode], byte 7
 
 ;initializing aliens of type 1
   mov ecx, 10
@@ -416,12 +416,18 @@ game:
       call alien_shooting
       add esp, 4
 
+      cmp byte [mode], 4
+      je intelligent_aliens
+
       push alien_shots_amount
       push alien_shots
       push dword 0
       push eax
       call create_shot
       add esp, 16
+
+      intelligent_aliens_ret:
+
 
       timer:
       xor eax, eax
@@ -581,6 +587,8 @@ move_alien_randomly:
     MOVE_DOWN esi
     jmp continue5
     not_possible_down:
+    cmp byte [mode], 4
+    je alien_disappears
     jmp try_move_up
 
   try_move_up:
@@ -607,7 +615,16 @@ move_alien_randomly:
     not_possible_left:
     jmp try_move_down
 
-
+  alien_disappears:
+    mov [esi + 6], byte 1
+    dec dword [living_aliens]
+    cmp dword [points + 4], 100
+    jb not_enough_points
+    sub dword [points + 4], 100
+    jmp continue5
+    not_enough_points:
+    mov [points + 4], dword 0
+    jmp continue5
 
 
 
@@ -633,23 +650,56 @@ alien_shooting:
   ret
 
 
-  ; mov ecx, [esp + 4]
-  ; mov eax, alien
-  ; mov ebx, 0
-  ; ciclo6:
-  ;   cmp byte [eax + ebx + 6], 0
-  ;   jne continue4
-  ;   dec ecx
-  ;   continue4:
-  ;   add ebx, 12
-  ;   cmp ecx, 0
-  ;   ja ciclo6
-  ; sub ebx, 12
-  ; add eax, ebx
-  ; ret
+;this method tells the aliens where to shoot in space_shooter mode
+intelligent_aliens:
+  xor edx, edx
+  mov dl, [ship + 4]
+  cmp [eax + 4], dl
+  ja shoot_up
+  jb shoot_down
+  xor edx, edx
+  mov dl, [ship + 5]
+  cmp [eax + 5], dl
+  ja shoot_left
+  jmp shoot_right
+  .end:
+  jmp intelligent_aliens_ret
 
+  shoot_up:
+  push alien_shots_amount
+  push alien_shots
+  push dword 1
+  push eax
+  call create_shot
+  add esp, 16
+  jmp intelligent_aliens.end
 
+  shoot_down:
+  push alien_shots_amount
+  push alien_shots
+  push dword 0
+  push eax
+  call create_shot
+  add esp, 16
+  jmp intelligent_aliens.end
 
+  shoot_right:
+  push alien_shots_amount
+  push alien_shots
+  push dword 4
+  push eax
+  call create_shot
+  add esp, 16
+  jmp intelligent_aliens.end
+
+  shoot_left:
+  push alien_shots_amount
+  push alien_shots
+  push dword 5
+  push eax
+  call create_shot
+  add esp, 16
+  jmp intelligent_aliens.end
 
 
 
@@ -815,7 +865,7 @@ decide_mode_lives:
   cmp byte [mode], 6 ; two players mode
   je two_players_lives
   cmp byte [mode], 7 ; mirror mode
-  je medium_lives
+  je two_players_lives
   .end:
   ret
 
@@ -852,7 +902,7 @@ decide_aliens_velocity:
   cmp byte [mode], 6 ; two players mode
   je easy_velocity
   cmp byte [mode], 7 ; mirror mode
-  je medium_velocity
+  je hard_velocity
   .end:
   ret
 
@@ -893,7 +943,7 @@ timer_for_shooting:
   cmp byte [mode], 3 ; crazy aliens mode
   je hard_shot
   cmp byte [mode], 4 ; space_shooter
-  je easy_shot
+  je arcade_shot
   cmp byte [mode], 5 ; arcade mode
   je arcade_shot
   cmp byte [mode], 6 ; two players mode
@@ -961,6 +1011,17 @@ get_input:
     bind_move KEY.DOWN, MOVE_DOWN, ship
     bind_move KEY.RIGHT, MOVE_RIGHT, ship
     bind_move KEY.LEFT, MOVE_LEFT, ship
+
+    cmp byte [mode], 7
+    jne not_mirror_mode
+    bind_move KEY.UP, MOVE_UP, ship2
+    bind_move KEY.DOWN, MOVE_DOWN, ship2
+    bind_move KEY.RIGHT, MOVE_LEFT, ship2
+    bind_move KEY.LEFT, MOVE_RIGHT, ship2
+
+    bind KEY.Spc, the_ship2_shot
+
+    not_mirror_mode:
 
     cmp byte [mode], 4
     jne not_space_shooter_mode
