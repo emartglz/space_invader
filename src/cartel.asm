@@ -62,19 +62,67 @@ fill_ini_screen:
     mov edx, [eax + 4]
     mov ecx, 2000
     ciclo:
-    mov al, [edx]
-    cmp al, ' '
-    je next
-    mov [esi], al
-    cmp [esi + 1], byte 0b0100_0000
-    je next
-    mov [esi + 1], bl
-    next:
-    inc edx
-    add esi, 4
+        mov al, [edx]
+        cmp al, ' '
+        je next
+        mov [esi], al
+        cmp [esi + 1], byte 0b0100_0000
+        je next
+        mov [esi + 1], bl
+        next:
+        inc edx
+        add esi, 4
     loop ciclo
 
     end:
+    END
+    %undef punt_map
+    %undef punt_wallpaper
+    ret
+
+global fill_end_screen
+fill_end_screen:
+    INI
+    %define punt_map [ebp + 12]
+    %define punt_wallpaper [ebp + 8]
+
+    mov esi, punt_map
+    mov eax, punt_wallpaper
+    mov bl, [eax + 8]
+    mov edx, [eax + 4]
+    mov ecx, 2000
+    ciclo_end:
+        mov al, [edx]
+        cmp al, ' '
+        je next_end
+        mov [esi], al
+        cmp [esi + 1], byte 0b0100_0000
+        je next_end
+        mov [esi + 1], bl
+        next_end:
+        inc edx
+        add esi, 4
+    loop ciclo_end
+
+    mov esi, punt_map
+    mov edi, punt_wallpaper
+    mov ebx, [edi + 16]
+    mov eax, [ebx + 4]
+    
+    ;add esi, 7252
+    mov ebx, 10
+    mov ecx, 5
+    mov edi, 0
+    add edi, 7272
+    ciclo2_end:
+        xor edx, edx  ; make edx = 0
+        div ebx
+        add dl, '0'
+        mov [esi + edi], byte dl
+        mov [esi + edi + 1], byte 13
+        sub edi, 4
+    loop ciclo2_end
+
     END
     %undef punt_map
     %undef punt_wallpaper

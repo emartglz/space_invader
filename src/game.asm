@@ -34,6 +34,32 @@ cartel db "\
 *                                                                              *\
 *                                                                              *\
 @******************************************************************************@", 0
+cartel_game_over db "\
+@******************************************************************************@\
+*                                                                              *\
+*                                                                              *\
+*           ***********   ***********   *         *   ***********              *\
+*           *             *         *   **       **   *                        *\
+*           *             *         *   *  *   *  *   *                        *\
+*           *             *         *   *    *    *   *                        *\
+*           *    ******   ***********   *         *   ***********              *\
+*           *         *   *         *   *         *   *                        *\
+*           *         *   *         *   *         *   *                        *\
+*           ***********   *         *   *         *   ***********              *\
+*                                                                              *\
+*           ***********   *         *   ***********   ***********              *\
+*           *         *   *         *   *             *         *              *\
+*           *         *   *         *   *             *         *              *\
+*           *         *   *         *   *             *         *              *\
+*           *         *     *     *     ***********   ***********              *\
+*           *         *      *   *      *             *       *                *\
+*           *         *       * *       *             *        *               *\
+*           ***********        *        ***********   *         *              *\
+*                                                                              *\
+*                                                                              *\
+*                        ENTER YOUR NAME: ___ POINTS:                          *\
+*                                                                              *\
+@******************************************************************************@", 0
 
 
 
@@ -50,6 +76,13 @@ index_cartel resd 2
 ini_wallpaper resd 3
 ini_drawables resd 5
 index resd 1
+
+end_wallpaper resd 5
+name resd 1
+puntuation resd 20
+fill_puntuation resd 2
+puntuation_drawables resd 5
+end_drawables resd 5
 
 living_aliens resd 1
 
@@ -76,6 +109,7 @@ timer_alien resd 2
 timer_shot resd 2
 timer_alien_shooting resd 2
 timer_wallpaper_ini resd 2
+timer_wallpaper_end resd 2
 
 game_start resb 1
 
@@ -128,12 +162,24 @@ game:
   xor ecx, ecx
   xor edx, edx
 
+  mov ecx, 10
+  ini_puntuation:
+    mov eax, ecx
+    mov ebx, 8
+    mul ebx
+    mov [puntuation + eax - 8], dword 0
+    mov [puntuation + eax - 4], dword 0
+  loop ini_puntuation
+    mov [name], dword 0
+
   ; Initialize game
 
   FILL_SCREEN BG.BLACK
 
   ; Calibrate the timing
   call calibrate
+
+  ;jmp puntuation_screen
 
   mov [game_start], byte 0
 
@@ -378,6 +424,11 @@ game:
       DESTROY_SHIP alien_shots_amount, alien_shots, ship
       DESTROY_SHIP alien_shots_amount, alien_shots, ship2
 
+      cmp [ship + 6], byte 0
+      je game_over_screen
+      cmp [living_aliens], dword 0
+      je game_over_screen
+      
       xor eax, eax
       call decide_aliens_velocity
       push eax
@@ -464,6 +515,48 @@ game:
 
     jmp game.loop
 
+puntuation_screen:
+  mov [ini_fill_screen], dword fill_map
+  mov [fill_puntuation], dword paint_puntuation
+  mov [fill_puntuation + 4], dword puntuation
+  mov [puntuation_drawables], dword ini_fill_screen
+  mov [puntuation_drawables + 4], dword fill_puntuation
+
+  puntuation_screen_loop:
+    REFRESH_MAP map, puntuation_drawables, 2
+    PAINT_MAP map
+  jmp puntuation_screen_loop
+
+
+game_over_screen:
+  mov [ini_fill_screen], dword fill_map
+  mov [end_wallpaper], dword fill_end_screen
+  mov [end_wallpaper + 4], dword cartel_game_over
+  mov [end_wallpaper + 8], byte 1
+  mov [end_wallpaper + 12], dword name
+  mov [end_wallpaper + 16], dword points
+  mov [end_drawables], dword ini_fill_screen
+  mov [end_drawables + 4], dword end_wallpaper
+
+  game_over_screen_loop:
+  call get_input_game_over_screen
+  cmp [game_start], byte 0
+  je puntuation_screen
+
+  push dword 1000
+  push dword timer_wallpaper_end
+  call delay
+  cmp eax, 0
+  jne change_wallpaper_end
+  ret_change_walpaper_end:
+
+  add esp, 8
+
+  REFRESH_MAP map, end_drawables, 2
+  PAINT_MAP map
+
+  jmp game_over_screen_loop
+
 ; the movement of the aliens depend on the chosen mode
 decide_alien_movement:
   cmp [index], byte 16
@@ -471,17 +564,28 @@ decide_alien_movement:
   cmp [index], byte 18
     je move_alien_randomly
 
+change_wallpaper_end:
+  inc byte [end_wallpaper + 8]
+  cmp byte [end_wallpaper + 8], 16
+  je  mod_16_end
+  ret_mod_16_end:
+  jmp ret_change_walpaper_end
+
+
+mod_16_end:
+  mov [end_wallpaper + 8], byte 1
+  jmp ret_mod_16_end
 
 change_wallpaper_ini:
   inc byte [ini_wallpaper + 8]
   cmp byte [ini_wallpaper + 8], 16
-  je  mod_16
-  ret_mod_16:
+  je  mod_16_ini
+  ret_mod_16_ini:
   jmp ret_change_walpaper_ini
 
-  mod_16:
+mod_16_ini:
   mov [ini_wallpaper + 8], byte 1
-  jmp ret_mod_16
+  jmp ret_mod_16_ini
 
 
 ; generate aliens so the game will never end
@@ -988,7 +1092,19 @@ enter_game:
   mov [game_start], byte 1
   ret
 
+restart_game:
+ mov [game_start], byte 0
+ ret
 
+
+get_input_game_over_screen:
+  call scan
+  push ax
+
+  bind KEY.ENTER,restart_game
+
+  add esp, 2
+  ret
 
 get_input_first_screen:
   call scan
