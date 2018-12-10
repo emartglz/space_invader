@@ -57,7 +57,7 @@ cartel_game_over db "\
 *           ***********        *        ***********   *         *              *\
 *                                                                              *\
 *                                                                              *\
-*                        PRESIONE ENTER PARA REINICIAR                         *\
+*                        ENTER YOUR NAME: ___ POINTS:                          *\
 *                                                                              *\
 @******************************************************************************@", 0
 
@@ -77,7 +77,11 @@ ini_wallpaper resd 3
 ini_drawables resd 5
 index resd 1
 
-end_wallpaper resd 3
+end_wallpaper resd 5
+name resd 1
+puntuation resd 20
+fill_puntuation resd 2
+puntuation_drawables resd 5
 end_drawables resd 5
 
 living_aliens resd 1
@@ -157,12 +161,24 @@ game:
   xor ecx, ecx
   xor edx, edx
 
+  mov ecx, 10
+  ini_puntuation:
+    mov eax, ecx
+    mov ebx, 8
+    mul ebx
+    mov [puntuation + eax - 8], dword 0
+    mov [puntuation + eax - 4], dword 0
+  loop ini_puntuation
+    mov [name], dword 0
+
   ; Initialize game
 
   FILL_SCREEN BG.BLACK
 
   ; Calibrate the timing
   call calibrate
+
+  ;jmp puntuation_screen
 
   mov [game_start], byte 0
 
@@ -393,6 +409,8 @@ game:
 
       cmp [ship + 6], byte 0
       je game_over_screen
+      cmp [living_aliens], dword 0
+      je game_over_screen
 
       push dword 200
       push timer_alien
@@ -493,18 +511,33 @@ game:
 
     jmp game.loop
 
+puntuation_screen:
+  mov [ini_fill_screen], dword fill_map
+  mov [fill_puntuation], dword paint_puntuation
+  mov [fill_puntuation + 4], dword puntuation
+  mov [puntuation_drawables], dword ini_fill_screen
+  mov [puntuation_drawables + 4], dword fill_puntuation
+
+  puntuation_screen_loop:
+    REFRESH_MAP map, puntuation_drawables, 2
+    PAINT_MAP map
+  jmp puntuation_screen_loop
+
+
 game_over_screen:
   mov [ini_fill_screen], dword fill_map
-  mov [end_wallpaper], dword fill_ini_screen
+  mov [end_wallpaper], dword fill_end_screen
   mov [end_wallpaper + 4], dword cartel_game_over
   mov [end_wallpaper + 8], byte 1
+  mov [end_wallpaper + 12], dword name
+  mov [end_wallpaper + 16], dword points
   mov [end_drawables], dword ini_fill_screen
   mov [end_drawables + 4], dword end_wallpaper
 
   game_over_screen_loop:
   call get_input_game_over_screen
   cmp [game_start], byte 0
-  je game
+  je puntuation_screen
 
   push dword 1000
   push dword timer_wallpaper_end
@@ -892,7 +925,7 @@ get_input_game_over_screen:
   call scan
   push ax
 
-  bind KEY.ENTER,  restart_game
+  bind KEY.ENTER,restart_game   
 
   add esp, 2
   ret
