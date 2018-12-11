@@ -123,6 +123,17 @@ fill_end_screen:
         sub edi, 4
     loop ciclo2_end
 
+    mov esi, punt_map
+    mov edi, punt_wallpaper
+    mov ebx, [edi + 12]
+    add esi, 7208
+    mov al, [ebx + 1]
+    mov [esi], al
+    mov al, [ebx + 2]
+    mov [esi + 4], al
+    mov al, [ebx + 3]
+    mov [esi + 8], al 
+
     END
     %undef punt_map
     %undef punt_wallpaper

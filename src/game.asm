@@ -3,6 +3,7 @@
 %include "map.mac"
 %include "move.mac"
 %include "shot.mac"
+%include "puntuation.mac"
 
 section .data
 ship_shots_amount db 3
@@ -80,6 +81,7 @@ index resd 1
 end_wallpaper resd 5
 name resd 1
 puntuation resd 20
+new_puntation resd 2
 fill_puntuation resd 2
 puntuation_drawables resd 5
 end_drawables resd 5
@@ -140,6 +142,16 @@ extern rtcs
   %%next:
 %endmacro
 
+%macro bind_input_letter 2
+  cmp byte [esp], %1
+  jne %%next
+  push name
+  push word %1
+  %2
+  add esp, 6
+  %%next:
+%endmacro
+
 
 ; Fill the screen with the given background color
 %macro FILL_SCREEN 1
@@ -170,7 +182,10 @@ game:
     mov [puntuation + eax - 8], dword 0
     mov [puntuation + eax - 4], dword 0
   loop ini_puntuation
-    mov [name], dword 0
+    
+  
+  start_game:
+  mov [name], dword 0
 
   ; Initialize game
 
@@ -398,6 +413,7 @@ game:
   xor ecx, ecx
   xor edx, edx
 
+;jmp game_over_screen
 
 ; Main loop
   game.loop:
@@ -523,6 +539,9 @@ puntuation_screen:
   mov [puntuation_drawables + 4], dword fill_puntuation
 
   puntuation_screen_loop:
+    call get_input_puntation_screen
+    cmp [game_start], byte 10
+    je start_game
     REFRESH_MAP map, puntuation_drawables, 2
     PAINT_MAP map
   jmp puntuation_screen_loop
@@ -1096,13 +1115,34 @@ restart_game:
  mov [game_start], byte 0
  ret
 
+name_taked:
+  mov eax, [name]
+  mov [new_puntation], eax
+
+  mov eax, [points + 4]
+  mov [new_puntation + 4], eax
+
+  ADD_PUNTUATION new_puntation, puntuation
+  mov [game_start], byte 0
+  ret
+
+exit_puntation:
+  mov [game_start], byte 10
+  ret
+
+get_input_puntation_screen:
+  call scan
+  push ax
+  bind KEY.ENTER, exit_puntation
+  add esp, 2
+  ret
 
 get_input_game_over_screen:
   call scan
   push ax
+  TAKE_NAME name, ax
 
-  bind KEY.ENTER,restart_game
-
+  bind KEY.ENTER,name_taked
   add esp, 2
   ret
 
