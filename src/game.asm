@@ -4,6 +4,7 @@
 %include "move.mac"
 %include "shot.mac"
 %include "puntuation.mac"
+%include "sound.mac"
 
 section .data
 ship_shots_amount db 3

@@ -1,3 +1,4 @@
+%include "sound.mac"
 
 %macro INI 0
   push ebp
@@ -11,6 +12,8 @@
   pop ebp
 %endmacro
 
+section .data
+timer_sound resd 2
 
 section .text
 
@@ -331,6 +334,9 @@ destroy_alien:
   mov [eax + 6], byte 1
 
   pusha
+  mov ax, 100
+  mov cx, 50
+  MAKE_SOUND ax, cx, timer_sound
   mov eax, punt_points
   xor ecx, ecx
   mov cx, [ebx + 9]
