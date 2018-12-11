@@ -71,6 +71,11 @@ alien resd 90
 points resd 2
 lives resd 2
 
+surprise_box resd 2
+drop_box resb 1 ;bool for dropping the surprise box
+timer_box resd 2 ; timer to move the surprise box
+timer_for_dropping resd 2 ; timer to drop the box
+
 ini_fill_screen resd 2
 index_cartel resd 2
 ini_wallpaper resd 3
@@ -79,9 +84,9 @@ index resd 1
 
 end_wallpaper resd 5
 name resd 1
-puntuation resd 20
-fill_puntuation resd 2
-puntuation_drawables resd 5
+punctuation resd 20
+fill_punctuation resd 2
+punctuation_drawables resd 5
 end_drawables resd 5
 
 living_aliens resd 1
@@ -103,7 +108,7 @@ ship2_shots resd 6
 alien_shots resd 20
 
 wallpaper resd 2
-drawables resd 51
+drawables resd 52
 
 timer_alien resd 2
 timer_shot resd 2
@@ -123,6 +128,7 @@ extern scan
 extern calibrate
 extern delay
 extern rtcs
+extern create_box
 
 ; Bind a key to a procedure
 %macro bind 2
@@ -163,13 +169,13 @@ game:
   xor edx, edx
 
   mov ecx, 10
-  ini_puntuation:
+  ini_punctuation:
     mov eax, ecx
     mov ebx, 8
     mul ebx
-    mov [puntuation + eax - 8], dword 0
-    mov [puntuation + eax - 4], dword 0
-  loop ini_puntuation
+    mov [punctuation + eax - 8], dword 0
+    mov [punctuation + eax - 4], dword 0
+  loop ini_punctuation
     mov [name], dword 0
 
   ; Initialize game
@@ -179,7 +185,7 @@ game:
   ; Calibrate the timing
   call calibrate
 
-  ;jmp puntuation_screen
+  ;jmp punctuation_screen
 
   mov [game_start], byte 0
 
@@ -231,6 +237,7 @@ game:
   mov [living_aliens], dword 30
   mov [bool_for_random], byte 1
   mov [mode], byte 7
+
 
 ;initializing aliens of type 1
   mov ecx, 10
@@ -370,7 +377,7 @@ game:
   add edx, 4
   loop m_alien_shots
 
-
+;initializing other things
   mov [wallpaper], dword fill_map
 
   mov [ship], dword paint_ship
@@ -393,6 +400,11 @@ game:
 
   mov [drawables + 200], dword ship2
 
+  mov [surprise_box], dword paint_box
+  mov [surprise_box + 6], byte 1
+  mov [drawables + 204], dword surprise_box
+  mov [drop_box], byte 1
+
   xor eax, eax
   xor ebx, ebx
   xor ecx, ecx
@@ -410,6 +422,7 @@ game:
       xor ecx, ecx
       xor edx, edx
 
+;moving all the shots
       push dword 70
       push timer_shot
       call delay
@@ -428,7 +441,8 @@ game:
       je game_over_screen
       cmp [living_aliens], dword 0
       je game_over_screen
-      
+
+;moving all the aliens
       xor eax, eax
       call decide_aliens_velocity
       push eax
@@ -450,7 +464,7 @@ game:
       xor edx, edx
 
 
-  ; random shots for the aliens
+; random shots for the aliens
 
       cmp byte[bool_for_random], 1
       jne timer
@@ -494,8 +508,28 @@ game:
 
       continue3:
 
+; random for dropping the surprise boxes
+      cmp byte [drop_box], 1
+      je random_dropping
+      random_dropping_end:
 
-      REFRESH_MAP map, drawables, 51
+      push dword 500
+      push timer_box
+      call delay
+      add esp, 8
+      cmp eax, 0
+      jne move_box
+      move_box_end:
+      DESTROY_SHOTS points, dword 1, ship_shots_amount, surprise_box, ship_shots
+      DESTROY_SHOTS points, dword 1, ship_shots_amount, surprise_box, ship2_shots
+      ; DESTROY_BOX ship_shots_amount, ship_shots, surprise_box
+      ; DESTROY_BOX ship_shots_amount, ship2_shots, surprise_box
+
+      cmp byte [drop_box], 0
+      je check_status
+      check_end:
+
+      REFRESH_MAP map, drawables, 52
 
 
       PAINT_MAP map
@@ -515,17 +549,17 @@ game:
 
     jmp game.loop
 
-puntuation_screen:
+punctuation_screen:
   mov [ini_fill_screen], dword fill_map
-  mov [fill_puntuation], dword paint_puntuation
-  mov [fill_puntuation + 4], dword puntuation
-  mov [puntuation_drawables], dword ini_fill_screen
-  mov [puntuation_drawables + 4], dword fill_puntuation
+  mov [fill_punctuation], dword paint_punctuation
+  mov [fill_punctuation + 4], dword punctuation
+  mov [punctuation_drawables], dword ini_fill_screen
+  mov [punctuation_drawables + 4], dword fill_punctuation
 
-  puntuation_screen_loop:
-    REFRESH_MAP map, puntuation_drawables, 2
+  punctuation_screen_loop:
+    REFRESH_MAP map, punctuation_drawables, 2
     PAINT_MAP map
-  jmp puntuation_screen_loop
+  jmp punctuation_screen_loop
 
 
 game_over_screen:
@@ -541,7 +575,7 @@ game_over_screen:
   game_over_screen_loop:
   call get_input_game_over_screen
   cmp [game_start], byte 0
-  je puntuation_screen
+  je punctuation_screen
 
   push dword 1000
   push dword timer_wallpaper_end
@@ -1086,6 +1120,38 @@ infinite_move:
  jne generate_aliens
  generate_aliens_ret:
  jmp infinite_move.end
+
+
+
+random_dropping:
+  rdtsc
+  xor edx, edx
+  mov ebx, 1000
+  div ebx
+  ;mov edx, 34
+  cmp edx, 10
+  jb drop_it
+  drop_it_end:
+  mov [drop_box], byte 0
+  jmp random_dropping_end
+
+
+drop_it:
+  push dword surprise_box
+  call create_box
+  add esp, 4
+  jmp drop_it_end
+
+move_box:
+  MOVE_BOX surprise_box
+  jmp move_box_end
+
+
+check_status:
+  cmp byte [surprise_box + 6], 1
+  jne check_end
+  mov byte [drop_box], 1
+  jmp check_end
 
 
 enter_game:

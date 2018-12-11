@@ -6,6 +6,7 @@
 extern destroy_alien
 extern destroy_ship
 extern destroy_shots
+extern destroy_box
 
 %endif
 
@@ -35,6 +36,14 @@ extern destroy_shots
  push %5
  call destroy_shots
  add esp, 20
+%endmacro
+
+%macro DESTROY_BOX 3
+ push %1
+ push %2
+ push %3
+ call destroy_box
+ add esp, 12
 %endmacro
 
 %endif

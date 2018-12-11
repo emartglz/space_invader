@@ -13,6 +13,7 @@ extern change_direction
 extern move_diag_right_up
 extern move_diag_left_up
 extern move_shots
+extern move_object
 
 %endif
 
@@ -75,6 +76,12 @@ extern move_shots
   push %2
   call move_shots
   add esp, 8
+%endmacro
+
+%macro MOVE_BOX 1
+  push %1
+  call move_object
+  add esp, 4
 %endmacro
 
 %endif

@@ -10,14 +10,14 @@
   pop ebp
 %endmacro
 
-global paint_puntuation
-paint_puntuation:
+global paint_punctuation
+paint_punctuation:
     INI
     %define punt_map[ebp + 12]
-    %define punt_puntuations[ebp + 8]
+    %define punt_punctuations[ebp + 8]
 
     mov esi, punt_map
-    mov eax, punt_puntuations
+    mov eax, punt_punctuations
     mov edi, [eax + 4]
     add esi, 960
     mov ecx, 9
@@ -68,22 +68,22 @@ paint_puntuation:
 
     END
     %undef punt_map
-    %undef punt_puntuations
+    %undef punt_punctuations
     ret
 
-global add_puntuation
-add_puntuation:
+global add_punctuation
+add_punctuation:
     INI
-    %define punt_puntuations [ebp + 8]
-    %define punt_new_puntuation [ebp + 12]
+    %define punt_punctuations [ebp + 8]
+    %define punt_new_punctuation [ebp + 12]
 
-    mov esi, punt_new_puntuation
+    mov esi, punt_new_punctuation
     mov ebx, [esi + 4]
-    mov edi, punt_puntuations
+    mov edi, punt_punctuations
     cmp [edi + 76], ebx
     jle end
 
-    mov eax, punt_puntuations
+    mov eax, punt_punctuations
     mov ecx, [ebx]
     mov [eax + 72], ecx
     mov ecx, [ebx + 4]
@@ -119,6 +119,6 @@ add_puntuation:
 
     end:
     END
-    %undef punt_puntuations
-    %undef punt_new_puntuation
+    %undef punt_punctuations
+    %undef punt_new_punctuation
     ret

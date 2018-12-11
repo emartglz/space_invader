@@ -22,7 +22,6 @@ paint_alien:
   mov edx, punt_alien
 
   mov bl, [edx + 6]
-  ;mov bl, 1
   cmp bl, 1
   je end
   xor eax, eax

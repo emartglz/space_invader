@@ -351,6 +351,45 @@ destroy_alien:
   %undef punt_living_aliens
   ret
 
+
+global destroy_box
+destroy_box:
+  INI
+  %define punt_box [ebp + 8]
+  %define punt_shots [ebp + 12]
+  %define punt_amount_shots [ebp + 16]
+
+  mov edi, punt_box
+  cmp byte [edi + 6], 1
+  je destroy_box_end
+
+  xor ecx, ecx
+  mov edx, punt_amount_shots
+  mov cl, [edx]
+  mov eax, punt_shots
+  xor edx, edx
+  mov dx, [edi + 4]
+
+  for:
+    cmp [eax + 4], dx
+    je matched
+    add eax, 8
+    loop for
+
+
+  destroy_box_end:
+  %undef punt_box
+  %undef punt_shots
+  %undef punt_amount_shots
+  END
+  ret
+
+  matched:
+  mov byte [eax + 6], 1
+  mov byte [edi + 6], 1
+  jmp destroy_box_end
+
+
 global paint_shot
 paint_shot:
     INI

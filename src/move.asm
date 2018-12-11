@@ -155,6 +155,97 @@ move_diag_left_up:
   ret
 
 
+
+
+
+;move_object(esp + 4: direction of the object to move)
+global move_object
+move_object:
+  push ebp
+  mov ebp, esp
+  pusha
+  mov eax, [ebp + 8]
+  cmp byte [eax + 7], 1
+  je move_object_up
+  cmp byte [eax + 7], 0
+  je move_object_down
+  cmp byte [eax + 7], 2
+  je move_object_dru
+  cmp byte [eax + 7], 3
+  je move_object_dlu
+  cmp byte [eax + 7], 4
+  je move_object_right
+  cmp byte [eax + 7], 5
+  je move_object_left
+
+  finish:
+  popa
+  mov esp, ebp
+  pop ebp
+  ret
+
+  move_object_up:
+  cmp byte [eax + 4], 0
+  je it_crashed
+  push eax
+  call move_up
+  add esp, 4
+  jmp finish
+
+  move_object_down:
+  cmp byte [eax + 4], 24
+  je it_crashed
+  push eax
+  call move_down
+  add esp, 4
+  jmp finish
+
+  move_object_dru:
+  cmp byte [eax + 4], 0
+  je it_crashed
+  cmp byte [eax + 5], 79
+  je it_crashed
+  push eax
+  call move_diag_right_up
+  add esp, 4
+  jmp finish
+
+  move_object_dlu:
+  cmp byte [eax + 4], 0
+  je it_crashed
+  cmp byte [eax + 5], 0
+  je it_crashed
+  push eax
+  call move_diag_left_up
+  add esp, 4
+  jmp finish
+
+  move_object_right:
+  cmp byte [eax + 5], 77
+  je it_crashed
+  push eax
+  call move_right
+  add esp, 4
+  jmp finish
+
+  move_object_left:
+  cmp byte [eax + 5], 2
+  je it_crashed
+  push eax
+  call move_left
+  add esp, 4
+  jmp finish
+
+  it_crashed:
+  mov byte [eax + 6], 1
+  jmp finish
+
+
+
+
+
+
+
 global move_shots
 move_shots:
   INI
@@ -169,97 +260,41 @@ move_shots:
   cmp byte [eax + 6], 0
   jne continue1
   push eax
-  call move_shot
+  call move_object
   add esp, 4
   continue1:
   add eax, 8
   loop find1
 
-  jmp move_shots_end
-
-  ;move_shot(esp + 4: direction of the shot to move)
-  move_shot:
-  push ebp
-  mov ebp, esp
-  pusha
-  mov eax, [ebp + 8]
-  cmp byte [eax + 7], 1
-  je move_shot_up
-  cmp byte [eax + 7], 0
-  je move_shot_down
-  cmp byte [eax + 7], 2
-  je move_shot_dru
-  cmp byte [eax + 7], 3
-  je move_shot_dlu
-  cmp byte [eax + 7], 4
-  je move_shot_right
-  cmp byte [eax + 7], 5
-  je move_shot_left
-
-  finish:
-  popa
-  mov esp, ebp
-  pop ebp
-  ret
-
-  move_shot_up:
-  cmp byte [eax + 4], 0
-  je it_crashed
-  push eax
-  call move_up
-  add esp, 4
-  jmp finish
-
-  move_shot_down:
-  cmp byte [eax + 4], 24
-  je it_crashed
-  push eax
-  call move_down
-  add esp, 4
-  jmp finish
-
-  move_shot_dru:
-  cmp byte [eax + 4], 0
-  je it_crashed
-  cmp byte [eax + 5], 79
-  je it_crashed
-  push eax
-  call move_diag_right_up
-  add esp, 4
-  jmp finish
-
-  move_shot_dlu:
-  cmp byte [eax + 4], 0
-  je it_crashed
-  cmp byte [eax + 5], 0
-  je it_crashed
-  push eax
-  call move_diag_left_up
-  add esp, 4
-  jmp finish
-
-  move_shot_right:
-  cmp byte [eax + 5], 77
-  je it_crashed
-  push eax
-  call move_right
-  add esp, 4
-  jmp finish
-
-  move_shot_left:
-  cmp byte [eax + 5], 2
-  je it_crashed
-  push eax
-  call move_left
-  add esp, 4
-  jmp finish
-
-  it_crashed:
-  mov byte [eax + 6], 1
-  jmp finish
-
-  move_shots_end:
   %undef shots
   %undef shots_amount
   END
   ret
+
+
+
+
+
+; global move_box
+; move_box:
+;   INI
+;   %define punt_box [ebp + 8]
+
+;   mov edx, punt_box
+;   cmp byte [edx + 6], 1
+;   je end_move_box
+
+;   cmp byte [edx + 4], 23
+;   je lost_box
+;   push dword punt_box
+;   call move_down
+;   add esp, 4
+
+;   end_move_box:
+;   %undef punt_box
+;   END
+;   ret
+
+;   lost_box:
+;   mov [edx + 6], byte 1
+;   jmp end_move_box
