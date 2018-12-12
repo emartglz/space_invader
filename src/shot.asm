@@ -14,6 +14,46 @@
 
 section .text
 
+;ebp + 8 memory direction of the ship that shot
+;ebp + 12 direction of the shot (0 down, 1 up, 2 diag-right-up, 3 diag-left-up)
+;ebp + 16 direction of the array of shots
+;ebp + 20 length of the array
+global create_shot
+create_shot:
+  INI
+  %define punt_ship [ebp + 8]
+  %define mov_dir [ebp + 12]
+  %define punt_shots [ebp + 16]
+  %define shots_amount [ebp + 20]
+
+
+
+  mov ecx, shots_amount
+  mov eax, punt_shots
+  find_available_shot:
+  cmp byte [eax + 6], 1
+  je create
+  add eax, 8
+  loop find_available_shot
+  jmp shot_finished
+
+  create:
+  mov ebx, punt_ship ; ship that shot
+  mov ecx, mov_dir ; direction of the shot
+  mov dx, [ebx + 4] ; row and col
+  mov [eax + 4], dx
+  mov [eax + 6], byte 0
+  mov [eax + 7], cl
+
+  shot_finished:
+  %undef punt_ship
+  %undef mov_dir
+  %undef punt_shots
+  %undef shots_amount
+  END
+  ret
+
+
 ;destroy(pos1, pos2, type)
 ;pos1: object to be destroyed
 ;pos2: object that destroys

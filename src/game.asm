@@ -77,11 +77,14 @@ drop_box resb 1 ;bool for dropping the surprise box
 timer_box resd 2 ; timer to move the surprise box
 timer_for_dropping resd 2 ; timer to drop the box
 
-special_weapons resd 1
+special_weapons resd 2
 current_weapon resd 1
-shield resd 5 ;dword function to paint, byte(shield + 6) 0-activated 1-notactivated, dword ship, dword ship2
 box_destroyed resb 1 ; 0 not destroyed, 1 destroyed
 bool_current resb 1 ; 0 there is no current weapon, 1 there is one
+
+;dword function to paint, byte(shield + 6) 0-activated 1-notactivated, dword function to create
+shield resd 5 ;ship, ship2
+ultrashot resd 7; shot (3), ship
 
 ini_fill_screen resd 2
 index_cartel resd 2
@@ -134,9 +137,9 @@ extern putc
 extern scan
 extern calibrate
 extern delay
-extern rtcs
 extern create_box
 extern create_shield
+extern create_shot
 
 ; Bind a key to a procedure
 %macro bind 2
@@ -420,8 +423,9 @@ game:
   mov [shield + 16], dword ship2
   mov [shield + 6], byte 1
 
-  mov [weapons_amount], byte 1
+  mov [weapons_amount], byte 2
   mov [special_weapons], dword shield
+  mov [special_weapons + 4], dword ultrashot
   mov [current_weapon], dword shield
   mov [bool_current], byte 0
 
@@ -508,7 +512,9 @@ game:
       cmp byte [mode], 4
       je intelligent_aliens
 
-      push alien_shots_amount
+      xor edx, edx
+      mov dl, [alien_shots_amount]
+      push edx
       push alien_shots
       push dword 0
       push eax
@@ -870,38 +876,40 @@ intelligent_aliens:
 
 
 
-;esp + 4 memory direction of the ship that shot
-;esp + 8 direction of the shot (0 down, 1 up, 2 diag-right-up, 3 diag-left-up)
-;esp + 12 direction of the array of shots
-;esp + 16 length of the array
-create_shot:
-  mov eax, [esp + 16]
-  mov ecx, 0
-  mov cl, [eax]
-  mov eax, [esp + 12]
-  find_available_shot:
-  cmp byte [eax + 6], 1
-  je create
-  add eax, 8
-  loop find_available_shot
-  shot_finished:
-  ret
+; ;esp + 4 memory direction of the ship that shot
+; ;esp + 8 direction of the shot (0 down, 1 up, 2 diag-right-up, 3 diag-left-up)
+; ;esp + 12 direction of the array of shots
+; ;esp + 16 length of the array
+; create_shot:
+;   mov eax, [esp + 16]
+;   mov ecx, 0
+;   mov cl, [eax]
+;   mov eax, [esp + 12]
+;   find_available_shot:
+;   cmp byte [eax + 6], 1
+;   je create
+;   add eax, 8
+;   loop find_available_shot
+;   shot_finished:
+;   ret
 
-  create:
-  mov ebx, [esp + 4] ; ship that shot
-  mov ecx, [esp + 8] ; direction of the shot
-  mov dx, [ebx + 4] ; row and col
-  mov [eax + 4], dx
-  mov [eax + 6], byte 0
-  mov [eax + 7], cl
-  jmp shot_finished
+;   create:
+;   mov ebx, [esp + 4] ; ship that shot
+;   mov ecx, [esp + 8] ; direction of the shot
+;   mov dx, [ebx + 4] ; row and col
+;   mov [eax + 4], dx
+;   mov [eax + 6], byte 0
+;   mov [eax + 7], cl
+;   jmp shot_finished
 
 
 ;this function is only called when our ship was the one who shot
 the_ship_shot:
   cmp byte [ship + 6], 0
   je .end
-  push ship_shots_amount
+  xor edx, edx
+  mov dl, [ship_shots_amount]
+  push edx
   push ship_shots
   push dword 1
   push ship
@@ -913,7 +921,9 @@ the_ship_shot:
 the_ship_shot_down:
   cmp byte [ship + 6], 0
   je .end
-  push ship_shots_amount
+  xor edx, edx
+  mov dl, [ship_shots_amount]
+  push edx
   push ship_shots
   push dword 0
   push ship
@@ -925,7 +935,9 @@ the_ship_shot_down:
 the_ship_shot_left:
   cmp byte [ship + 6], 0
   je .end
-  push ship_shots_amount
+  xor edx, edx
+  mov dl, [ship_shots_amount]
+  push edx
   push ship_shots
   push dword 5
   push ship
@@ -937,7 +949,9 @@ the_ship_shot_left:
 the_ship_shot_right:
   cmp byte [ship + 6], 0
   je .end
-  push ship_shots_amount
+  xor edx, edx
+  mov dl, [ship_shots_amount]
+  push edx
   push ship_shots
   push dword 4
   push ship
@@ -950,7 +964,9 @@ the_ship_shot_right:
 the_ship2_shot:
   cmp byte [ship2 + 6], 0
   je .end
-  push ship_shots_amount
+  xor edx, edx
+  mov dl, [ship_shots_amount]
+  push edx
   push ship2_shots
   push dword 1
   push ship2
@@ -960,49 +976,49 @@ the_ship2_shot:
   ret
 
 ; Special weapon
-ultrashot:
-  cmp byte [ship + 6], 0
-  je ultrashot_end
-  mov dl, 3
-  mov cl, [ship_shots_amount]
-  mov eax, ship_shots
-  yes:
-    cmp byte [eax + 6], 1
-    jne .continue
-    dec dl
-    cmp dl, 0
-    je yes_end
-    .continue:
-    add eax, 8
-  loop yes
-  cmp dl, 0
-  jne ultrashot_end
-  yes_end:
+; ultrashot:
+;   cmp byte [ship + 6], 0
+;   je ultrashot_end
+;   mov dl, 3
+;   mov cl, [ship_shots_amount]
+;   mov eax, ship_shots
+;   yes:
+;     cmp byte [eax + 6], 1
+;     jne .continue
+;     dec dl
+;     cmp dl, 0
+;     je yes_end
+;     .continue:
+;     add eax, 8
+;   loop yes
+;   cmp dl, 0
+;   jne ultrashot_end
+;   yes_end:
 
-  ;shot that goes up
-  push ship_shots_amount
-  push ship_shots
-  push dword 1
-  push ship
-  call create_shot
-  add esp, 16
-  ;shot that goes to the right and up in diagonal direction
-  push ship_shots_amount
-  push ship_shots
-  push dword 2
-  push ship
-  call create_shot
-  add esp, 16
-  ;shot that goes to the left and up in diagonal direction
-  push ship_shots_amount
-  push ship_shots
-  push dword 3
-  push ship
-  call create_shot
-  add esp, 16
+;   ;shot that goes up
+;   push ship_shots_amount
+;   push ship_shots
+;   push dword 1
+;   push ship
+;   call create_shot
+;   add esp, 16
+;   ;shot that goes to the right and up in diagonal direction
+;   push ship_shots_amount
+;   push ship_shots
+;   push dword 2
+;   push ship
+;   call create_shot
+;   add esp, 16
+;   ;shot that goes to the left and up in diagonal direction
+;   push ship_shots_amount
+;   push ship_shots
+;   push dword 3
+;   push ship
+;   call create_shot
+;   add esp, 16
 
-  ultrashot_end:
-  ret
+;   ultrashot_end:
+;   ret
 
 ;this is for cheating
 add_lives:
