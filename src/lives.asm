@@ -34,13 +34,30 @@ paint_lives:
     mov eax, [ebx + 4]
     mov cl, [eax + 6]
     cmp cl, 0
-    je end
+    je no_lives_ship1
 
     ciclo:
     mov [esi], byte 3
     mov [esi + 1], byte 4
     add esi, 4
     loop ciclo
+
+    no_lives_ship1:
+
+    mov esi, punt_map
+    add esi, 300
+
+    xor ecx, ecx
+    mov eax, [ebx + 8]
+    mov cl, [eax + 6]
+    cmp cl, 0
+    je end
+
+    ciclo2:
+    mov [esi], byte 3
+    mov [esi + 1], byte 4
+    add esi, 4
+    loop ciclo2
 
     end:
     END

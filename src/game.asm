@@ -3,6 +3,8 @@
 %include "map.mac"
 %include "move.mac"
 %include "shot.mac"
+%include "puntuation.mac"
+%include "sound.mac"
 
 section .data
 ship_shots_amount db 3
@@ -11,28 +13,28 @@ aliens_amount dd 30
 weapons_amount db 1
 cartel db "\
 @******************************************************************************@\
+*                                    _                           _             *\
+*  ___  _ __    __ _   ___   ___    (_) _ __  __   __  __ _   __| |  ___  _ __ *\
+* / __|| '_ \  / _` | / __| / _ \   | || '_ \ \ \ / / / _` | / _` | / _ \| '__|*\
+* \__ \| |_) || (_| || (__ |  __/   | || | | | \ v / | (_| || (_| ||  __/| |   *\
+* |___/| .__/  \__,_| \___| \___|   |_||_| |_|  \_/   \__,_| \__,_| \___||_|   *\
+*      |_|                                                                     *\
 *                                                                              *\
+*                                  EASY MODE                                   *\
 *                                                                              *\
-*    ************   ************  ***********   ***********   ***********      *\
-*    *              *          *  *         *   *             *                *\
-*    *              *          *  *         *   *             *                *\
-*    *              *          *  *         *   *             *                *\
-*    ************   ************  ***********   *             ***********      *\
-*               *   *             *         *   *             *                *\
-*               *   *             *         *   *             *                *\
-*               *   *             *         *   *             *                *\
-*    ************   *             *         *   ***********   ***********      *\
+*                                 NORMAL MODE                                  *\
 *                                                                              *\
-*                                                                              *\
-*                                  EPILEPSIA                                   *\
-*                                                                              *\
-*                                 NORMAL  GAME                                 *\
+*                                  HARD MODE                                   *\
 *                                                                              *\
 *                                 CRAZY  MODE                                  *\
 *                                                                              *\
+*                                SPACE SHOOTER                                 *\
 *                                                                              *\
+*                                   ARCADE                                     *\
 *                                                                              *\
+*                                 MULTIPLAYER                                  *\
 *                                                                              *\
+*                                 MIRROR MODE                                  *\
 *                                                                              *\
 @******************************************************************************@", 0
 cartel_game_over db "\
@@ -70,7 +72,7 @@ ship resd 2
 ship2 resd 2
 alien resd 90
 points resd 2
-lives resd 2
+lives resd 3
 
 surprise_box resd 2
 drop_box resb 1 ;bool for dropping the surprise box
@@ -94,9 +96,10 @@ index resd 1
 
 end_wallpaper resd 5
 name resd 1
-punctuation resd 20
-fill_punctuation resd 2
-punctuation_drawables resd 5
+puntuation resd 20
+new_puntation resd 2
+fill_puntuation resd 2
+puntuation_drawables resd 5
 end_drawables resd 5
 
 living_aliens resd 1
@@ -157,6 +160,16 @@ extern create_shot
   %%next:
 %endmacro
 
+%macro bind_input_letter 2
+  cmp byte [esp], %1
+  jne %%next
+  push name
+  push word %1
+  %2
+  add esp, 6
+  %%next:
+%endmacro
+
 
 ; Fill the screen with the given background color
 %macro FILL_SCREEN 1
@@ -184,10 +197,13 @@ game:
     mov eax, ecx
     mov ebx, 8
     mul ebx
-    mov [punctuation + eax - 8], dword 0
-    mov [punctuation + eax - 4], dword 0
-  loop ini_punctuation
-    mov [name], dword 0
+    mov [puntuation + eax - 8], dword 0
+    mov [puntuation + eax - 4], dword 0
+  loop ini_puntuation
+    
+  
+  start_game:
+  mov [name], dword 0
 
   ; Initialize game
 
@@ -208,9 +224,9 @@ game:
 
   mov [index_cartel], dword paint_cartel
   mov [index_cartel + 4], dword index
-  mov [index], byte 16
-  mov [index + 1], byte 16
-  mov [index + 2], byte 20
+  mov [index], byte 8
+  mov [index + 1], byte 8
+  mov [index + 2], byte 22
 
   mov [ini_drawables], dword ini_fill_screen
   mov [ini_drawables + 4], dword index_cartel
@@ -247,7 +263,18 @@ game:
 
   mov [living_aliens], dword 30
   mov [bool_for_random], byte 1
-  mov [mode], byte 4
+
+  ;mov [mode], byte 7
+
+  mov al, byte [index]
+  mov ebx, 2
+  div ebx
+  sub eax, 4
+  mov [mode], al
+
+  xor eax, eax
+  xor ebx, ebx
+  xor edx, edx
 
 
 ;initializing aliens of type 1
@@ -407,6 +434,7 @@ game:
 
   mov [lives], dword paint_lives
   mov [lives + 4], dword ship
+  mov [lives + 8], dword ship2
   mov [drawables + 196], dword lives
 
   mov [drawables + 200], dword ship2
@@ -438,6 +466,7 @@ game:
   xor ecx, ecx
   xor edx, edx
 
+;jmp game_over_screen
 
 ; Main loop
   game.loop:
@@ -466,11 +495,25 @@ game:
       DESTROY_SHIP shield, alien_shots_amount, alien_shots, ship2
 
       cmp [ship + 6], byte 0
-      je game_over_screen
+      je ship1_ded
+      ret_ship1_ded:
       cmp [living_aliens], dword 0
       je game_over_screen
 
-;moving all the aliens
+      pusha
+      mov ecx, 30
+      mov esi, alien
+
+      check_last_fill_aliens:
+        cmp [esi + 6], byte 1
+        je next_check
+        cmp [esi + 4], byte 24
+        je game_over_screen
+        next_check:
+        add esi, 12
+      loop check_last_fill_aliens
+      popa
+
       xor eax, eax
       call decide_aliens_velocity
       push eax
@@ -581,15 +624,23 @@ game:
 
     jmp game.loop
 
-punctuation_screen:
+ship1_ded:
+  cmp [ship2 + 6], byte 0
+  je game_over_screen
+  jmp ret_ship1_ded
+
+puntuation_screen:
   mov [ini_fill_screen], dword fill_map
   mov [fill_punctuation], dword paint_punctuation
   mov [fill_punctuation + 4], dword punctuation
   mov [punctuation_drawables], dword ini_fill_screen
   mov [punctuation_drawables + 4], dword fill_punctuation
 
-  punctuation_screen_loop:
-    REFRESH_MAP map, punctuation_drawables, 2
+  puntuation_screen_loop:
+    call get_input_puntation_screen
+    cmp [game_start], byte 10
+    je start_game
+    REFRESH_MAP map, puntuation_drawables, 2
     PAINT_MAP map
   jmp punctuation_screen_loop
 
@@ -625,10 +676,22 @@ game_over_screen:
 
 ; the movement of the aliens depend on the chosen mode
 decide_alien_movement:
-  cmp [index], byte 16
+  cmp [mode], byte 0 
     je move_alien
-  cmp [index], byte 18
+  cmp [mode], byte 1 
+    je move_alien
+  cmp [mode], byte 2
+    je move_alien
+  cmp [mode], byte 7
+    je move_alien
+  cmp [mode], byte 3
     je move_alien_randomly
+  cmp [mode], byte 4
+    je move_alien_randomly
+  cmp [mode], byte 5
+    je move_alien_randomly
+  cmp [mode], byte 6
+    je move_alien
 
 change_wallpaper_end:
   inc byte [end_wallpaper + 8]
@@ -1234,16 +1297,38 @@ restart_game:
  mov [game_start], byte 0
  ret
 
+name_taked:
+  mov eax, [name]
+  mov [new_puntation], eax
+
+  mov eax, [points + 4]
+  mov [new_puntation + 4], eax
+
+  ADD_PUNTUATION new_puntation, puntuation
+  mov [game_start], byte 0
+  ret
+
+exit_puntation:
+  mov [game_start], byte 10
+  ret
+
+get_input_puntation_screen:
+  call scan
+  push ax
+  bind KEY.ENTER, exit_puntation
+  add esp, 2
+  ret
 
 get_input_game_over_screen:
   call scan
   push ax
+  TAKE_NAME name, ax
 
-  bind KEY.ENTER,restart_game
-
+  bind KEY.ENTER,name_taked
   add esp, 2
   ret
 
+global get_input_first_screen
 get_input_first_screen:
   call scan
   push ax

@@ -1,3 +1,4 @@
+%include "sound.mac"
 
 %macro INI 0
   push ebp
@@ -11,6 +12,8 @@
   pop ebp
 %endmacro
 
+section .data
+timer_sound resd 2
 
 section .text
 
@@ -147,6 +150,12 @@ destroy_shots:
   mov [edi + 6], byte 1
 
   pusha
+  mov ax, 1080
+  mov cx, 50
+  MAKE_SOUND ax, cx, timer_sound
+  popa
+
+  pusha
   mov eax, punt_points
   mov ecx, 20
   add [eax + 4], ecx
@@ -221,6 +230,11 @@ destroy_ship:
   dec byte [ebx + 6]
   not_safety:
   mov [eax + 6], byte 1
+  pusha
+  mov ax, 780
+  mov cx, 50
+  MAKE_SOUND ax, cx, timer_sound
+  popa
   cmp byte [ebx + 6], 0
   je finish
   jmp same_row1_ret
@@ -380,6 +394,9 @@ destroy_alien:
   mov [eax + 6], byte 1
 
   pusha
+  mov ax, 480
+  mov cx, 50
+  MAKE_SOUND ax, cx, timer_sound
   mov eax, punt_points
   xor ecx, ecx
   mov cx, [ebx + 9]
