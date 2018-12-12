@@ -135,6 +135,7 @@ destroy_ship:
   %define punt_ship [ebp + 8]
   %define punt_shot [ebp + 12]
   %define punt_amount_shots [ebp + 16]
+  %define punt_shield [ebp + 20]
 
   mov ebx, punt_ship
   mov dh, [ebx + 6]
@@ -174,11 +175,19 @@ destroy_ship:
   jmp same_row1_ret
 
   same_row1_correct2:
+  mov edi, punt_shield
+  cmp byte [edi + 6], 0
+  je safety
   dec byte [ebx + 6]
+  not_safety:
   mov [eax + 6], byte 1
   cmp byte [ebx + 6], 0
   je finish
   jmp same_row1_ret
+
+  safety:
+  mov byte [edi + 6], 1
+  jmp not_safety
 
 
   ; mov edi, punt_ship ; ship
@@ -358,6 +367,7 @@ destroy_box:
   %define punt_box [ebp + 8]
   %define punt_shots [ebp + 12]
   %define punt_amount_shots [ebp + 16]
+  %define punt_bool [ebp + 20]
 
   mov edi, punt_box
   cmp byte [edi + 6], 1
@@ -376,18 +386,22 @@ destroy_box:
     add eax, 8
     loop for
 
+    jmp destroy_box_end
+
+  matched:
+  mov byte [eax + 6], 1
+  mov byte [edi + 6], 1
+  mov eax, punt_bool
+  mov byte [eax], 1
 
   destroy_box_end:
   %undef punt_box
   %undef punt_shots
   %undef punt_amount_shots
+  %undef punt_bool
   END
   ret
 
-  matched:
-  mov byte [eax + 6], 1
-  mov byte [edi + 6], 1
-  jmp destroy_box_end
 
 
 global paint_shot

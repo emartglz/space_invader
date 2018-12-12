@@ -73,8 +73,8 @@ create_box:
     je down
 
     create_end:
-    %undef punt_box
     END
+    %undef punt_box
     ret
 
     left:

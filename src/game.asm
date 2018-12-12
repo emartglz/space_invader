@@ -8,6 +8,7 @@ section .data
 ship_shots_amount db 3
 alien_shots_amount db 10
 aliens_amount dd 30
+weapons_amount db 1
 cartel db "\
 @******************************************************************************@\
 *                                                                              *\
@@ -76,6 +77,12 @@ drop_box resb 1 ;bool for dropping the surprise box
 timer_box resd 2 ; timer to move the surprise box
 timer_for_dropping resd 2 ; timer to drop the box
 
+special_weapons resd 1
+current_weapon resd 1
+shield resd 5 ;dword function to paint, byte(shield + 6) 0-activated 1-notactivated, dword ship, dword ship2
+box_destroyed resb 1 ; 0 not destroyed, 1 destroyed
+bool_current resb 1 ; 0 there is no current weapon, 1 there is one
+
 ini_fill_screen resd 2
 index_cartel resd 2
 ini_wallpaper resd 3
@@ -108,7 +115,7 @@ ship2_shots resd 6
 alien_shots resd 20
 
 wallpaper resd 2
-drawables resd 52
+drawables resd 53
 
 timer_alien resd 2
 timer_shot resd 2
@@ -129,6 +136,7 @@ extern calibrate
 extern delay
 extern rtcs
 extern create_box
+extern create_shield
 
 ; Bind a key to a procedure
 %macro bind 2
@@ -236,7 +244,7 @@ game:
 
   mov [living_aliens], dword 30
   mov [bool_for_random], byte 1
-  mov [mode], byte 7
+  mov [mode], byte 4
 
 
 ;initializing aliens of type 1
@@ -404,6 +412,22 @@ game:
   mov [surprise_box + 6], byte 1
   mov [drawables + 204], dword surprise_box
   mov [drop_box], byte 1
+  mov [box_destroyed], byte 0
+
+  mov [shield], dword paint_shield
+  mov [shield + 8], dword create_shield
+  mov [shield + 12], dword ship
+  mov [shield + 16], dword ship2
+  mov [shield + 6], byte 1
+
+  mov [weapons_amount], byte 1
+  mov [special_weapons], dword shield
+  mov [current_weapon], dword shield
+  mov [bool_current], byte 0
+
+  xor eax, eax
+  mov eax, [current_weapon]
+  mov [drawables + 208], eax
 
   xor eax, eax
   xor ebx, ebx
@@ -434,8 +458,8 @@ game:
       DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship2_shots
       DESTROY_ALIEN points, living_aliens, alien, ship_shots, ship_shots_amount
       DESTROY_ALIEN points, living_aliens, alien, ship2_shots, ship_shots_amount
-      DESTROY_SHIP alien_shots_amount, alien_shots, ship
-      DESTROY_SHIP alien_shots_amount, alien_shots, ship2
+      DESTROY_SHIP shield, alien_shots_amount, alien_shots, ship
+      DESTROY_SHIP shield, alien_shots_amount, alien_shots, ship2
 
       cmp [ship + 6], byte 0
       je game_over_screen
@@ -520,16 +544,18 @@ game:
       cmp eax, 0
       jne move_box
       move_box_end:
-      DESTROY_SHOTS points, dword 1, ship_shots_amount, surprise_box, ship_shots
-      DESTROY_SHOTS points, dword 1, ship_shots_amount, surprise_box, ship2_shots
-      ; DESTROY_BOX ship_shots_amount, ship_shots, surprise_box
-      ; DESTROY_BOX ship_shots_amount, ship2_shots, surprise_box
+      DESTROY_BOX box_destroyed, ship_shots_amount, ship_shots, surprise_box
+      DESTROY_BOX box_destroyed, ship_shots_amount, ship2_shots, surprise_box
 
       cmp byte [drop_box], 0
       je check_status
       check_end:
 
-      REFRESH_MAP map, drawables, 52
+      cmp byte [box_destroyed], 1
+      je generate_weapon
+      generate_weapon_end:
+
+      REFRESH_MAP map, drawables, 53
 
 
       PAINT_MAP map
@@ -633,6 +659,7 @@ generate_aliens:
     xor edx, edx
     mov ebx, 75
     div ebx
+    add edx, 2
     mov [edi + 4], byte 1
     mov [edi + 5], dl
     mov [edi + 6], byte 0
@@ -987,6 +1014,7 @@ add_lives:
 
 
 
+
 decide_mode_lives:
   cmp byte [mode], 0 ; easy mode
   je easy_lives
@@ -1154,6 +1182,34 @@ check_status:
   jmp check_end
 
 
+generate_weapon:
+  mov byte [box_destroyed], 0 ;restore bool to false
+  rdtsc
+  xor edx, edx
+  xor ebx, ebx
+  mov bl, [weapons_amount]
+  div ebx
+  mov ecx, [special_weapons + edx]
+  mov [current_weapon], ecx
+  mov [bool_current], byte 1
+  xor eax, eax
+  xor ebx, ebx
+  xor ecx, ecx
+  xor edx, edx
+  jmp generate_weapon_end
+
+use_weapon:
+  cmp byte [bool_current], 0
+  je not_used
+  mov eax, [current_weapon]
+  push eax
+  call dword [eax + 8]
+  add esp, 4
+  mov [bool_current], byte 0
+  not_used:
+  ret
+
+
 enter_game:
   mov [game_start], byte 1
   ret
@@ -1218,7 +1274,7 @@ get_input:
     bind KEY.Spc, the_ship_shot
 
     it_was_ss_mode:
-    bind KEY.Q, ultrashot
+    bind KEY.Q, use_weapon
     bind KEY.1, add_lives
 
     cmp byte [mode], 6

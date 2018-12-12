@@ -20,12 +20,13 @@ extern destroy_box
  add esp, 20
 %endmacro
 
-%macro DESTROY_SHIP 3
+%macro DESTROY_SHIP 4
  push %1
  push %2
  push %3
+ push %4
  call destroy_ship
- add esp, 12
+ add esp, 16
 %endmacro
 
 %macro DESTROY_SHOTS 5
@@ -38,12 +39,13 @@ extern destroy_box
  add esp, 20
 %endmacro
 
-%macro DESTROY_BOX 3
+%macro DESTROY_BOX 4
  push %1
  push %2
  push %3
+ push %4
  call destroy_box
- add esp, 12
+ add esp, 16
 %endmacro
 
 %endif
