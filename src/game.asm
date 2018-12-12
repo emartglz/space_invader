@@ -71,7 +71,7 @@ ship resd 2
 ship2 resd 2
 alien resd 90
 points resd 2
-lives resd 2
+lives resd 3
 
 ini_fill_screen resd 2
 index_cartel resd 2
@@ -417,6 +417,7 @@ game:
 
   mov [lives], dword paint_lives
   mov [lives + 4], dword ship
+  mov [lives + 8], dword ship2
   mov [drawables + 196], dword lives
 
   mov [drawables + 200], dword ship2
@@ -454,10 +455,25 @@ game:
       DESTROY_SHIP alien_shots_amount, alien_shots, ship2
 
       cmp [ship + 6], byte 0
-      je game_over_screen
+      je ship1_ded
+      ret_ship1_ded:
       cmp [living_aliens], dword 0
       je game_over_screen
-      
+
+      pusha
+      mov ecx, 30
+      mov esi, alien
+
+      check_last_fill_aliens:
+        cmp [esi + 6], byte 1
+        je next_check
+        cmp [esi + 4], byte 24
+        je game_over_screen
+        next_check:
+        add esi, 12
+      loop check_last_fill_aliens
+      popa
+
       xor eax, eax
       call decide_aliens_velocity
       push eax
@@ -544,6 +560,11 @@ game:
 
     jmp game.loop
 
+ship1_ded:
+  cmp [ship2 + 6], byte 0
+  je game_over_screen
+  jmp ret_ship1_ded
+
 puntuation_screen:
   mov [ini_fill_screen], dword fill_map
   mov [fill_puntuation], dword paint_puntuation
@@ -606,7 +627,7 @@ decide_alien_movement:
   cmp [mode], byte 5
     je move_alien_randomly
   cmp [mode], byte 6
-    je move_alien_randomly
+    je move_alien
 
 change_wallpaper_end:
   inc byte [end_wallpaper + 8]
@@ -1171,6 +1192,7 @@ get_input_game_over_screen:
   add esp, 2
   ret
 
+global get_input_first_screen
 get_input_first_screen:
   call scan
   push ax

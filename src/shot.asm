@@ -110,6 +110,12 @@ destroy_shots:
   mov [edi + 6], byte 1
 
   pusha
+  mov ax, 1080
+  mov cx, 50
+  MAKE_SOUND ax, cx, timer_sound
+  popa
+
+  pusha
   mov eax, punt_points
   mov ecx, 20
   add [eax + 4], ecx
@@ -179,6 +185,11 @@ destroy_ship:
   same_row1_correct2:
   dec byte [ebx + 6]
   mov [eax + 6], byte 1
+  pusha
+  mov ax, 780
+  mov cx, 50
+  MAKE_SOUND ax, cx, timer_sound
+  popa
   cmp byte [ebx + 6], 0
   je finish
   jmp same_row1_ret
@@ -334,7 +345,7 @@ destroy_alien:
   mov [eax + 6], byte 1
 
   pusha
-  mov ax, 100
+  mov ax, 480
   mov cx, 50
   MAKE_SOUND ax, cx, timer_sound
   mov eax, punt_points

@@ -1,3 +1,5 @@
+%include "keyboard.mac"
+
 %macro INI 0
   push ebp
   mov ebp, esp
@@ -8,6 +10,14 @@
   popa
   mov esp, ebp
   pop ebp
+%endmacro
+
+%macro ASCII 3
+    cmp %1, %2
+    jne %%end
+    mov al, %3
+    jmp letra_ya
+    %%end:
 %endmacro
 
 global paint_puntuation
@@ -88,80 +98,44 @@ take_name:
     ;jmp take_name_end
 
     mov al, key
-    cmp al, 0x02
-    je l1
-    cmp al, 0x03
-    je l2
-    cmp al, 0x04
-    je l3
-    cmp al, 0x05
-    je l4
-    cmp al, 0x06
-    je l5
-    cmp al, 0x07
-    je l6
-    cmp al, 0x08
-    je l7
-    cmp al, 0x09
-    je l8
-    cmp al, 0x0A
-    je l9
+
+    ASCII al, KEY.A, 'A'
+    ASCII al, KEY.B, 'B'
+    ASCII al, KEY.C, 'C'
+    ASCII al, KEY.D, 'D'
+    ASCII al, KEY.E, 'E'
+    ASCII al, KEY.F, 'F'
+    ASCII al, KEY.G, 'G'
+    ASCII al, KEY.H, 'H'
+    ASCII al, KEY.I, 'I'
+    ASCII al, KEY.J, 'J'
+    ASCII al, KEY.K, 'K'
+    ASCII al, KEY.L, 'L'
+    ASCII al, KEY.M, 'M'
+    ASCII al, KEY.N, 'N'
+    ASCII al, KEY.O, 'O'
+    ASCII al, KEY.P, 'P'
+    ASCII al, KEY.Q, 'Q'
+    ASCII al, KEY.R, 'R'
+    ASCII al, KEY.S, 'S'
+    ASCII al, KEY.T, 'T'
+    ASCII al, KEY.U, 'U'
+    ASCII al, KEY.V, 'V' 
+    ASCII al, KEY.W, 'W'
+    ASCII al, KEY.X, 'X'
+    ASCII al, KEY.Y, 'Y'
+    ASCII al, KEY.Z, 'Z'
+    ASCII al, KEY.1, '1'
+    ASCII al, KEY.2, '2'
+    ASCII al, KEY.3, '3'
+    ASCII al, KEY.4, '4'
+    ASCII al, KEY.5, '5'
+    ASCII al, KEY.6, '6'
+    ASCII al, KEY.7, '7'
+    ASCII al, KEY.8, '8'
+    ASCII al, KEY.9, '9'    
+
     jmp take_name_end
-
-;  KEY.Q               0x10
-;  KEY.W               0x11
-;  KEY.E               0x12
-;  KEY.R               0x13
-;  KEY.T               0x14
-;  KEY.Y               0x15
-;  KEY.U               0x16
-;  KEY.I               0x17
-;  KEY.O               0x18
-;  KEY.P               0x19
-;  KEY.A               0x1E
-;  KEY.S               0x1F
-;  KEY.D               0x20
-;  KEY.F               0x21
-;  KEY.G               0x22
-;  KEY.H               0x23
-;  KEY.J               0x24
-;  KEY.K               0x25
-;  KEY.L               0x26
-;  KEY.Z               0x2C
-;  KEY.X               0x2D
-;  KEY.C               0x2E
-;  KEY.V               0x2F
-;  KEY.B               0x30
-;  KEY.N               0x31
-;  KEY.M               0x32
-
-    l1:
-    mov al, '1'
-    jmp letra_ya
-    l2:
-    mov al, '2'
-    jmp letra_ya
-    l3:
-    mov al, '3'
-    jmp letra_ya
-    l4:
-    mov al, '4'
-    jmp letra_ya
-    l5:
-    mov al, '5'
-    jmp letra_ya
-    l6:
-    mov al, '6'
-    jmp letra_ya
-    l7:
-    mov al, '7'
-    jmp letra_ya
-    l8:
-    mov al, '8'
-    jmp letra_ya
-    l9:
-    mov al, '9'
-    jmp letra_ya
 
     letra_ya:
 
