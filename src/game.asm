@@ -12,28 +12,28 @@ alien_shots_amount db 10
 aliens_amount dd 30
 cartel db "\
 @******************************************************************************@\
+*                                    _                           _             *\
+*  ___  _ __    __ _   ___   ___    (_) _ __  __   __  __ _   __| |  ___  _ __ *\
+* / __|| '_ \  / _` | / __| / _ \   | || '_ \ \ \ / / / _` | / _` | / _ \| '__|*\
+* \__ \| |_) || (_| || (__ |  __/   | || | | | \ v / | (_| || (_| ||  __/| |   *\
+* |___/| .__/  \__,_| \___| \___|   |_||_| |_|  \_/   \__,_| \__,_| \___||_|   *\
+*      |_|                                                                     *\
 *                                                                              *\
+*                                  EASY MODE                                   *\
 *                                                                              *\
-*    ************   ************  ***********   ***********   ***********      *\
-*    *              *          *  *         *   *             *                *\
-*    *              *          *  *         *   *             *                *\
-*    *              *          *  *         *   *             *                *\
-*    ************   ************  ***********   *             ***********      *\
-*               *   *             *         *   *             *                *\
-*               *   *             *         *   *             *                *\
-*               *   *             *         *   *             *                *\
-*    ************   *             *         *   ***********   ***********      *\
+*                                 NORMAL MODE                                  *\
 *                                                                              *\
-*                                                                              *\
-*                                  EPILEPSIA                                   *\
-*                                                                              *\
-*                                 NORMAL  GAME                                 *\
+*                                  HARD MODE                                   *\
 *                                                                              *\
 *                                 CRAZY  MODE                                  *\
 *                                                                              *\
+*                                SPACE SHOOTER                                 *\
 *                                                                              *\
+*                                   ARCADE                                     *\
 *                                                                              *\
+*                                 MULTIPLAYER                                  *\
 *                                                                              *\
+*                                 MIRROR MODE                                  *\
 *                                                                              *\
 @******************************************************************************@", 0
 cartel_game_over db "\
@@ -207,9 +207,9 @@ game:
 
   mov [index_cartel], dword paint_cartel
   mov [index_cartel + 4], dword index
-  mov [index], byte 16
-  mov [index + 1], byte 16
-  mov [index + 2], byte 20
+  mov [index], byte 8
+  mov [index + 1], byte 8
+  mov [index + 2], byte 22
 
   mov [ini_drawables], dword ini_fill_screen
   mov [ini_drawables + 4], dword index_cartel
@@ -246,7 +246,19 @@ game:
 
   mov [living_aliens], dword 30
   mov [bool_for_random], byte 1
-  mov [mode], byte 7
+
+  ;mov [mode], byte 7
+
+  mov al, byte [index]
+  mov ebx, 2
+  div ebx
+  sub eax, 4
+  mov [mode], al
+
+  xor eax, eax
+  xor ebx, ebx
+  xor edx, edx
+
 
 ;initializing aliens of type 1
   mov ecx, 10
@@ -579,9 +591,21 @@ game_over_screen:
 
 ; the movement of the aliens depend on the chosen mode
 decide_alien_movement:
-  cmp [index], byte 16
+  cmp [mode], byte 0 
     je move_alien
-  cmp [index], byte 18
+  cmp [mode], byte 1 
+    je move_alien
+  cmp [mode], byte 2
+    je move_alien
+  cmp [mode], byte 7
+    je move_alien
+  cmp [mode], byte 3
+    je move_alien_randomly
+  cmp [mode], byte 4
+    je move_alien_randomly
+  cmp [mode], byte 5
+    je move_alien_randomly
+  cmp [mode], byte 6
     je move_alien_randomly
 
 change_wallpaper_end:
