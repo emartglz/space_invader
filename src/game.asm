@@ -77,7 +77,7 @@ drop_box resb 1 ;bool for dropping the surprise box
 timer_box resd 2 ; timer to move the surprise box
 timer_for_dropping resd 2 ; timer to drop the box
 
-special_weapons resd 2
+special_weapons resd 1
 current_weapon resd 1
 box_destroyed resb 1 ; 0 not destroyed, 1 destroyed
 bool_current resb 1 ; 0 there is no current weapon, 1 there is one
@@ -423,9 +423,9 @@ game:
   mov [shield + 16], dword ship2
   mov [shield + 6], byte 1
 
-  mov [weapons_amount], byte 2
+  mov [weapons_amount], byte 1
   mov [special_weapons], dword shield
-  mov [special_weapons + 4], dword ultrashot
+  ;mov [special_weapons + 4], dword ultrashot
   mov [current_weapon], dword shield
   mov [bool_current], byte 0
 
