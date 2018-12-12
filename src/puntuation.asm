@@ -20,8 +20,8 @@
     %%end:
 %endmacro
 
-global paint_puntuation
-paint_puntuation:
+global paint_punctuation
+paint_punctuation:
     INI
     %define punt_map[ebp + 12]
     %define punt_punctuations[ebp + 8]

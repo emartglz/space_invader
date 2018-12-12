@@ -96,10 +96,10 @@ index resd 1
 
 end_wallpaper resd 5
 name resd 1
-puntuation resd 20
+punctuation resd 20
 new_puntation resd 2
-fill_puntuation resd 2
-puntuation_drawables resd 5
+fill_punctuation resd 2
+punctuation_drawables resd 5
 end_drawables resd 5
 
 living_aliens resd 1
@@ -197,9 +197,9 @@ game:
     mov eax, ecx
     mov ebx, 8
     mul ebx
-    mov [puntuation + eax - 8], dword 0
-    mov [puntuation + eax - 4], dword 0
-  loop ini_puntuation
+    mov [punctuation + eax - 8], dword 0
+    mov [punctuation + eax - 4], dword 0
+  loop ini_punctuation
     
   
   start_game:
@@ -629,18 +629,18 @@ ship1_ded:
   je game_over_screen
   jmp ret_ship1_ded
 
-puntuation_screen:
+punctuation_screen:
   mov [ini_fill_screen], dword fill_map
   mov [fill_punctuation], dword paint_punctuation
   mov [fill_punctuation + 4], dword punctuation
   mov [punctuation_drawables], dword ini_fill_screen
   mov [punctuation_drawables + 4], dword fill_punctuation
 
-  puntuation_screen_loop:
+  punctuation_screen_loop:
     call get_input_puntation_screen
     cmp [game_start], byte 10
     je start_game
-    REFRESH_MAP map, puntuation_drawables, 2
+    REFRESH_MAP map, punctuation_drawables, 2
     PAINT_MAP map
   jmp punctuation_screen_loop
 
@@ -1304,7 +1304,7 @@ name_taked:
   mov eax, [points + 4]
   mov [new_puntation + 4], eax
 
-  ADD_PUNTUATION new_puntation, puntuation
+  ADD_PUNCTUATION new_puntation, punctuation
   mov [game_start], byte 0
   ret
 
