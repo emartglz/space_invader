@@ -236,7 +236,7 @@ destroy_ship:
   MAKE_SOUND ax, cx, timer_sound
   popa
   cmp byte [ebx + 6], 0
-  je finish
+  je finish_sound
   jmp same_row1_ret
 
   safety:
@@ -281,6 +281,50 @@ destroy_ship:
   ;   cmp byte [edi + 6], 0
   ;   je finish
   ;   jmp continue3
+
+finish_sound:
+  MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+
+    jmp finish
 
   finish:
     END

@@ -228,13 +228,13 @@ game:
     mov [punctuation + eax - 8], dword 0
     mov [punctuation + eax - 4], dword 0
   loop ini_punctuation
-    mov [punctuation], dword ' YOO'
+    mov [punctuation], dword ' YO '
     mov [punctuation + 4], dword 66666
-    mov [punctuation + 8], dword '  Y '
+    mov [punctuation + 8], dword ' Y  '
     mov [punctuation + 12], dword 55555
-    mov [punctuation + 16], dword '  TU'
+    mov [punctuation + 16], dword ' TU '
     mov [punctuation + 20], dword 44444
-    mov [punctuation + 24], dword ' NOO'
+    mov [punctuation + 24], dword ' NO!'
     mov [punctuation + 28], dword 33333
     
   
