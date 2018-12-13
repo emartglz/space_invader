@@ -231,7 +231,7 @@ game:
     mov [punctuation + eax - 8], dword 0
     mov [punctuation + eax - 4], dword 0
   loop ini_punctuation
-<<<<<<< HEAD
+    
     mov [punctuation], dword ' YO '
     mov [punctuation + 4], dword 66666
     mov [punctuation + 8], dword ' Y  '
@@ -242,9 +242,6 @@ game:
     mov [punctuation + 28], dword 33333
     
   
-=======
-
->>>>>>> a807a33ea33f72245b5e68208405acd92b92dd5b
   start_game:
   mov [name], dword 0
 

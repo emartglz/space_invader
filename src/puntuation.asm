@@ -134,10 +134,7 @@ take_name:
     ASCII al, KEY.7, '7'
     ASCII al, KEY.8, '8'
     ASCII al, KEY.9, '9'
-<<<<<<< HEAD
     ASCII al, KEY.BckSp, byte 0  
-=======
->>>>>>> a807a33ea33f72245b5e68208405acd92b92dd5b
 
     jmp take_name_end
 
