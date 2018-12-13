@@ -10,7 +10,8 @@ section .data
 ship_shots_amount db 3
 alien_shots_amount db 10
 aliens_amount dd 30
-weapons_amount db 1
+weapons_amount db 2
+ultrashots_amount db 3
 cartel db "\
 @******************************************************************************@\
 *                                    _                           _             *\
@@ -104,14 +105,15 @@ drop_box resb 1 ;bool for dropping the surprise box
 timer_box resd 2 ; timer to move the surprise box
 timer_for_dropping resd 2 ; timer to drop the box
 
-special_weapons resd 1
+special_weapons resd 2
 current_weapon resd 1
 box_destroyed resb 1 ; 0 not destroyed, 1 destroyed
 bool_current resb 1 ; 0 there is no current weapon, 1 there is one
 
 ;dword function to paint, byte(shield + 6) 0-activated 1-notactivated, dword function to create
 shield resd 5 ;ship, ship2
-ultrashot resd 7; shot (3), ship
+ultrashot resd 5; shots (3), ship
+shots resd 6
 
 ini_fill_screen resd 2
 index_cartel resd 2
@@ -149,7 +151,7 @@ ship2_shots resd 6
 alien_shots resd 20
 
 wallpaper resd 2
-drawables resd 53
+drawables resd 54
 
 timer_alien resd 2
 timer_shot resd 2
@@ -171,6 +173,7 @@ extern delay
 extern create_box
 extern create_shield
 extern create_shot
+extern create_ultrashot
 
 ; Bind a key to a procedure
 %macro bind 2
@@ -228,6 +231,7 @@ game:
     mov [punctuation + eax - 8], dword 0
     mov [punctuation + eax - 4], dword 0
   loop ini_punctuation
+<<<<<<< HEAD
     mov [punctuation], dword ' YO '
     mov [punctuation + 4], dword 66666
     mov [punctuation + 8], dword ' Y  '
@@ -238,6 +242,9 @@ game:
     mov [punctuation + 28], dword 33333
     
   
+=======
+
+>>>>>>> a807a33ea33f72245b5e68208405acd92b92dd5b
   start_game:
   mov [name], dword 0
 
@@ -487,15 +494,22 @@ game:
   mov [shield + 16], dword ship2
   mov [shield + 6], byte 1
 
-  mov [weapons_amount], byte 1
+  mov [ultrashot], dword paint_ultrashot
+  mov [ultrashot + 6], byte 1
+  mov [ultrashot + 8], dword create_ultrashot
+  mov [ultrashot + 12], dword shots
+  mov [ultrashot + 16], dword ship
+  mov [shots], dword paint_shot
+  mov [shots + 8], dword paint_shot
+  mov [shots + 16], dword paint_shot
+
+  mov [weapons_amount], byte 2
   mov [special_weapons], dword shield
-  ;mov [special_weapons + 4], dword ultrashot
-  mov [current_weapon], dword shield
+  mov [special_weapons + 4], dword ultrashot
   mov [bool_current], byte 0
 
-  xor eax, eax
-  mov eax, [current_weapon]
-  mov [drawables + 208], eax
+  mov [drawables + 208], dword shield
+  mov [drawables + 212], dword ultrashot
 
   xor eax, eax
   xor ebx, ebx
@@ -528,8 +542,10 @@ game:
       move_shots_ret:
       DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship_shots
       DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship2_shots
+      DESTROY_SHOTS points, alien_shots_amount, ultrashots_amount, alien_shots, shots
       DESTROY_ALIEN points, living_aliens, alien, ship_shots, ship_shots_amount
       DESTROY_ALIEN points, living_aliens, alien, ship2_shots, ship_shots_amount
+      DESTROY_ALIEN points, living_aliens, alien, shots, ultrashots_amount
       DESTROY_SHIP shield, alien_shots_amount, alien_shots, ship
       DESTROY_SHIP shield, alien_shots_amount, alien_shots, ship2
 
@@ -643,7 +659,7 @@ game:
       je generate_weapon
       generate_weapon_end:
 
-      REFRESH_MAP map, drawables, 53
+      REFRESH_MAP map, drawables, 54
 
 
       PAINT_MAP map
@@ -837,6 +853,7 @@ move_all_shots:
   MOVE_SHOTS alien_shots_amount, alien_shots
   MOVE_SHOTS ship_shots_amount, ship2_shots
   MOVE_SHOTS ship_shots_amount, ship_shots
+  MOVE_ULTRASHOT ultrashot
   jmp move_shots_ret
 
 
@@ -1365,7 +1382,11 @@ generate_weapon:
   xor ebx, ebx
   mov bl, [weapons_amount]
   div ebx
-  mov ecx, [special_weapons + edx]
+  xor eax, eax
+  mov eax, edx
+  mov edx, 4
+  mul edx
+  mov ecx, [special_weapons + eax]
   mov [current_weapon], ecx
   mov [bool_current], byte 1
   xor eax, eax

@@ -505,6 +505,21 @@ destroy_box:
 
 
 
+
+; global destroy_ultrashot
+; destroy_ultrashot:
+;   INI
+;   %define ultrashot [ebp + 8]
+;   %define punt_alien [ebp + 12]
+;   %define punt
+
+;   mov ebx, ultrashot
+;   mov eax, [ebx + 12] ; punt shots
+
+
+
+
+
 global paint_shot
 paint_shot:
     INI
