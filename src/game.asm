@@ -28,13 +28,13 @@ cartel db "\
 *                                                                              *\
 *                                 CRAZY  MODE                                  *\
 *                                                                              *\
-*                                SPACE SHOOTER                                 *\
+*                                SPACE SHOOTER             Integrantes:        *\
 *                                                                              *\
-*                                   ARCADE                                     *\
+*                                   ARCADE             Carmen Irene Cabrera    *\
 *                                                                              *\
-*                                 MULTIPLAYER                                  *\
+*                                 MULTIPLAYER          Enrique Martinez Glez   *\
 *                                                                              *\
-*                                 MIRROR MODE                                  *\
+*                                 MIRROR MODE                 C-212            *\
 *                                                                              *\
 @******************************************************************************@", 0
 cartel_game_over db "\
@@ -63,7 +63,32 @@ cartel_game_over db "\
 *                        ENTER YOUR NAME: ___ POINTS:                          *\
 *                                                                              *\
 @******************************************************************************@", 0
-
+pause_cartel db "\
+@******************************************************************************@\
+*                                    _                           _             *\
+*  ___  _ __    __ _   ___   ___    (_) _ __  __   __  __ _   __| |  ___  _ __ *\
+* / __|| '_ \  / _` | / __| / _ \   | || '_ \ \ \ / / / _` | / _` | / _ \| '__|*\
+* \__ \| |_) || (_| || (__ |  __/   | || | | | \ v / | (_| || (_| ||  __/| |   *\
+* |___/| .__/  \__,_| \___| \___|   |_||_| |_|  \_/   \__,_| \__,_| \___||_|   *\
+*      |_|                                                                     *\
+*                                                                              *\
+*                                   RESUME                                     *\
+*                                                                              *\
+*                                END THIS GAME                                 *\
+*                                                                              *\
+*                                    EXIT                                      *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+@******************************************************************************@", 0
 
 
 section .bss
@@ -101,6 +126,9 @@ new_puntation resd 2
 fill_punctuation resd 2
 punctuation_drawables resd 5
 end_drawables resd 5
+
+pause_drawables resd 5
+pause_wallpaper resd 3
 
 living_aliens resd 1
 
@@ -200,6 +228,14 @@ game:
     mov [punctuation + eax - 8], dword 0
     mov [punctuation + eax - 4], dword 0
   loop ini_punctuation
+    mov [punctuation], dword ' YOO'
+    mov [punctuation + 4], dword 66666
+    mov [punctuation + 8], dword '  Y '
+    mov [punctuation + 12], dword 55555
+    mov [punctuation + 16], dword '  TU'
+    mov [punctuation + 20], dword 44444
+    mov [punctuation + 24], dword ' NOO'
+    mov [punctuation + 28], dword 33333
     
   
   start_game:
@@ -473,6 +509,9 @@ game:
 
     .input:
       call get_input
+      cmp [game_start], byte 11;pause
+      je pause_screen
+      return_from_pause:
 
       xor eax, eax
       xor ebx, ebx
@@ -629,6 +668,51 @@ ship1_ded:
   je game_over_screen
   jmp ret_ship1_ded
 
+pause_screen:
+  mov [ini_fill_screen], dword fill_map
+
+  mov [pause_wallpaper], dword fill_ini_screen
+  mov [pause_wallpaper + 4], dword pause_cartel
+  mov [pause_wallpaper + 8], byte 1
+
+  mov [index_cartel], dword paint_cartel
+  mov [index_cartel + 4], dword index
+  mov [index], byte 8
+  mov [index + 1], byte 8
+  mov [index + 2], byte 12
+
+  mov [pause_drawables], dword ini_fill_screen
+  mov [pause_drawables + 4], dword index_cartel
+  mov [pause_drawables + 8], dword pause_wallpaper
+
+  pause_screen_loop:
+  call get_input_pause_screen
+
+  cmp [game_start], byte 20
+  je decide_pause
+
+  push dword 1000
+  push timer_wallpaper_ini
+  call delay
+  cmp eax, 0
+  jne change_wallpaper_ini2
+  ret_change_walpaper_ini2:
+
+  add esp, 8
+
+  REFRESH_MAP map, pause_drawables, 3
+  PAINT_MAP map
+
+  jmp pause_screen_loop
+
+decide_pause:
+  cmp [index], byte 8
+  je return_from_pause
+  cmp [index], byte 10
+  je game_over_screen
+  cmp [index], byte 12
+  je start_game
+
 punctuation_screen:
   mov [ini_fill_screen], dword fill_map
   mov [fill_punctuation], dword paint_punctuation
@@ -700,6 +784,12 @@ change_wallpaper_end:
   ret_mod_16_end:
   jmp ret_change_walpaper_end
 
+change_wallpaper_ini2:
+  inc byte [pause_wallpaper + 8]
+  cmp byte [pause_wallpaper + 8], 16
+  je  mod_16_ini2
+  ret_mod_16_ini2:
+  jmp ret_change_walpaper_ini2
 
 mod_16_end:
   mov [end_wallpaper + 8], byte 1
@@ -711,6 +801,10 @@ change_wallpaper_ini:
   je  mod_16_ini
   ret_mod_16_ini:
   jmp ret_change_walpaper_ini
+
+mod_16_ini2:
+  mov [pause_wallpaper + 8], byte 1
+  jmp ret_mod_16_ini2
 
 mod_16_ini:
   mov [ini_wallpaper + 8], byte 1
@@ -1116,14 +1210,17 @@ decide_mode_lives:
 
   easy_lives:
   mov [ship + 6], byte 5
+  mov [ship2 + 6], byte 0
   jmp decide_mode_lives.end
 
   medium_lives:
   mov [ship + 6], byte 3
+  mov [ship2 + 6], byte 0
   jmp decide_mode_lives.end
 
   hard_lives:
   mov [ship + 6], byte 1
+  mov [ship2 + 6], byte 0
   jmp decide_mode_lives.end
 
   two_players_lives:
@@ -1145,7 +1242,7 @@ decide_aliens_velocity:
   cmp byte [mode], 5 ; arcade mode
   je easy_velocity
   cmp byte [mode], 6 ; two players mode
-  je easy_velocity
+  je hard_velocity
   cmp byte [mode], 7 ; mirror mode
   je hard_velocity
   .end:
@@ -1308,8 +1405,16 @@ name_taked:
   mov [game_start], byte 0
   ret
 
+make_pause
+  mov [game_start], byte 11
+  ret
+
 exit_puntation:
   mov [game_start], byte 10
+  ret
+
+exit_pause:
+  mov [game_start], byte 20
   ret
 
 get_input_puntation_screen:
@@ -1328,7 +1433,15 @@ get_input_game_over_screen:
   add esp, 2
   ret
 
-global get_input_first_screen
+get_input_pause_screen:
+  call scan
+  push ax
+  bind_move KEY.UP, MOVE_UP_CARTEL, index
+  bind_move KEY.DOWN, MOVE_DOWN_CARTEL, index
+  bind KEY.ENTER, exit_pause
+  add esp, 2
+  ret
+
 get_input_first_screen:
   call scan
   push ax
@@ -1346,15 +1459,16 @@ get_input:
     ; The value of the input is on 'word [esp]'
     ; Your bindings here
 
-    bind_move KEY.UP, MOVE_UP, ship
-    bind_move KEY.DOWN, MOVE_DOWN, ship
+    bind KEY.Esc, make_pause
+    ;bind_move KEY.UP, MOVE_UP, ship
+    ;bind_move KEY.DOWN, MOVE_DOWN, ship
     bind_move KEY.RIGHT, MOVE_RIGHT, ship
     bind_move KEY.LEFT, MOVE_LEFT, ship
 
     cmp byte [mode], 7
     jne not_mirror_mode
-    bind_move KEY.UP, MOVE_UP, ship2
-    bind_move KEY.DOWN, MOVE_DOWN, ship2
+    ;bind_move KEY.UP, MOVE_UP, ship2
+    ;bind_move KEY.DOWN, MOVE_DOWN, ship2
     bind_move KEY.RIGHT, MOVE_LEFT, ship2
     bind_move KEY.LEFT, MOVE_RIGHT, ship2
 
@@ -1364,6 +1478,8 @@ get_input:
 
     cmp byte [mode], 4
     jne not_space_shooter_mode
+    bind_move KEY.UP, MOVE_UP, ship
+    bind_move KEY.DOWN, MOVE_DOWN, ship
     bind KEY.W, the_ship_shot
     bind KEY.S, the_ship_shot_down
     bind KEY.D, the_ship_shot_right
@@ -1376,14 +1492,14 @@ get_input:
 
     it_was_ss_mode:
     bind KEY.Q, use_weapon
-    bind KEY.1, add_lives
+    ;bind KEY.1, add_lives
 
     cmp byte [mode], 6
     jne not_two_players_mode
 
     ;this will only happen if it is two_players mode
-    bind_move KEY.W, MOVE_UP, ship2
-    bind_move KEY.S, MOVE_DOWN, ship2
+    ;bind_move KEY.W, MOVE_UP, ship2
+    ;bind_move KEY.S, MOVE_DOWN, ship2
     bind_move KEY.D, MOVE_RIGHT, ship2
     bind_move KEY.A, MOVE_LEFT, ship2
 

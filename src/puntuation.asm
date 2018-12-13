@@ -133,7 +133,8 @@ take_name:
     ASCII al, KEY.6, '6'
     ASCII al, KEY.7, '7'
     ASCII al, KEY.8, '8'
-    ASCII al, KEY.9, '9'    
+    ASCII al, KEY.9, '9'
+    ASCII al, KEY.BckSp, byte 0  
 
     jmp take_name_end
 
@@ -147,19 +148,34 @@ take_name:
     cmp [ebx + 3], byte 0
     je ini3
 
+    cmp al, 0
+    jne take_name_end
+    mov [ebx + 3], byte 0
+
+
     jmp take_name_end
 
     ini1:
     mov [ebx + 1], al
     jmp take_name_end
     ini2:
+    cmp al, 0
+    je del2
     mov [ebx + 2], al
     jmp take_name_end
     ini3:
+    cmp al, 0
+    je del3
     mov [ebx + 3], al
     jmp take_name_end
 
-    
+    del2:
+    mov [ebx + 1], byte 0
+    jmp take_name_end
+
+    del3:
+    mov [ebx + 2], byte 0
+    jmp take_name_end
 
     take_name_end:
 
