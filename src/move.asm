@@ -161,10 +161,10 @@ move_diag_left_up:
 ;move_object(esp + 4: direction of the object to move)
 global move_object
 move_object:
-  push ebp
-  mov ebp, esp
-  pusha
-  mov eax, [ebp + 8]
+  INI
+  %define object [ebp + 8]
+  
+  mov eax, object
   cmp byte [eax + 7], 1
   je move_object_up
   cmp byte [eax + 7], 0
@@ -179,9 +179,8 @@ move_object:
   je move_object_left
 
   finish:
-  popa
-  mov esp, ebp
-  pop ebp
+  %undef object
+  END
   ret
 
   move_object_up:
@@ -275,26 +274,25 @@ move_shots:
 
 
 
-; global move_box
-; move_box:
-;   INI
-;   %define punt_box [ebp + 8]
+global move_ultrashot
+move_ultrashot:
+  INI
+  %define ultrashot [ebp + 8]
 
-;   mov edx, punt_box
-;   cmp byte [edx + 6], 1
-;   je end_move_box
+  mov eax, ultrashot
+  mov ebx , [eax + 12] ;punt shots
+  mov ecx, 3
 
-;   cmp byte [edx + 4], 23
-;   je lost_box
-;   push dword punt_box
-;   call move_down
-;   add esp, 4
+  move_them:
+    cmp byte [ebx + 6], 1
+    je .continue
+    push ebx
+    call move_object
+    add esp, 4
+    .continue:
+    add ebx, 8
+  loop move_them
 
-;   end_move_box:
-;   %undef punt_box
-;   END
-;   ret
-
-;   lost_box:
-;   mov [edx + 6], byte 1
-;   jmp end_move_box
+  %undef ultrashot
+  END
+  ret

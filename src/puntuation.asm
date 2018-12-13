@@ -120,7 +120,7 @@ take_name:
     ASCII al, KEY.S, 'S'
     ASCII al, KEY.T, 'T'
     ASCII al, KEY.U, 'U'
-    ASCII al, KEY.V, 'V' 
+    ASCII al, KEY.V, 'V'
     ASCII al, KEY.W, 'W'
     ASCII al, KEY.X, 'X'
     ASCII al, KEY.Y, 'Y'
@@ -133,7 +133,7 @@ take_name:
     ASCII al, KEY.6, '6'
     ASCII al, KEY.7, '7'
     ASCII al, KEY.8, '8'
-    ASCII al, KEY.9, '9'    
+    ASCII al, KEY.9, '9'
 
     jmp take_name_end
 

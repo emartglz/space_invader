@@ -26,17 +26,16 @@ paint_ultrashot:
   je end_painting
 
 
-  mov edx, 12
+  mov ebx, [edi + 12]; punt_shots
   mov ecx, 3
+  mov eax, [ebx]; punt function to paint
 
   for:
-    mov ebx, [edi + edx]
-    mov eax, [ebx]
     push dword punt_map
     push ebx
     call eax
     add esp, 8
-    add edx, 4
+    add ebx, 8
   loop for
 
   end_painting:
@@ -53,20 +52,19 @@ create_ultrashot:
 
   mov edi, punt_object
   mov [edi + 6], byte 0 ; activating ultrashot
-  mov eax, [edi + 24] ; punt ship
-  mov edx, 12
+  mov eax, [edi + 16] ; punt ship
+  mov edx, [edi + 12]; punt shot
   mov ecx, 3
   mov esi, 1
 
   ciclo:
-    mov ebx, [edi + edx] ; punt shot
     push dword 1
-    push ebx
+    push edx
     push esi
     push eax
     call create_shot
     add esp, 16
-    add edx, 4
+    add edx, 8
     inc esi
   loop ciclo
 
