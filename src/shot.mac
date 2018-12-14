@@ -8,6 +8,11 @@ extern destroy_ship
 extern destroy_shots
 extern destroy_box
 extern destroy_eternal
+extern create_box
+extern create_shield
+extern create_shot
+extern create_ultrashot
+extern create_eternal_shot
 
 %endif
 
@@ -64,6 +69,12 @@ extern destroy_eternal
  push %9
  call destroy_eternal
  add esp, 36
+%endmacro
+
+%macro CREATE_ESPECIAL_SHOTS 2
+push %1
+call %2
+add esp, 4
 %endmacro
 
 %endif

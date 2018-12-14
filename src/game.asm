@@ -175,11 +175,6 @@ extern putc
 extern scan
 extern calibrate
 extern delay
-extern create_box
-extern create_shield
-extern create_shot
-extern create_ultrashot
-extern create_eternal_shot
 
 ; Bind a key to a procedure
 %macro bind 2
@@ -1362,9 +1357,10 @@ use_weapon:
   cmp byte [bool_current], 0
   je not_used
   mov eax, [current_weapon]
-  push eax
-  call dword [eax + 8]
-  add esp, 4
+  CREATE_ESPECIAL_SHOTS eax, [eax + 8]
+  ;push eax
+  ;call dword [eax + 8]
+  ;add esp, 4
   mov [bool_current], byte 0
   not_used:
   ret
@@ -1389,7 +1385,7 @@ name_taked:
   mov [game_start], byte 0
   ret
 
-make_pause
+make_pause:
   mov [game_start], byte 11
   ret
 
