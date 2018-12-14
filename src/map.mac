@@ -20,6 +20,7 @@ extern paint_punctuation
 extern paint_box
 extern paint_shield
 extern paint_ultrashot
+extern paint_eternal_shot
 
 %endif
 

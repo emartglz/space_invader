@@ -111,6 +111,7 @@ destroy_shots:
  %define punt_amount_ship_shots [ebp + 16]
  %define punt_amount_alien_shots [ebp + 20]
  %define punt_points [ebp + 24]
+ %define bool_eternal [ebp + 28]
 
   mov eax, punt_amount_ship_shots
   mov ecx, 0
@@ -147,8 +148,12 @@ destroy_shots:
 
   it_matched:
   mov [ebx + 6], byte 1
+  mov eax, bool_eternal
+  cmp byte [eax], 1
+  je continue7
   mov [edi + 6], byte 1
 
+  continue7:
   pusha
   mov ax, 1080
   mov cx, 50
@@ -347,6 +352,7 @@ destroy_alien:
   %define punt_alien [ebp + 16]
   %define punt_living_aliens [ebp + 20]
   %define punt_points [ebp + 24]
+  %define bool_eternal [ebp + 28]
 
 
   ; mov eax, punt_amount_shots
@@ -435,8 +441,12 @@ destroy_alien:
 
   same_row_correct2:
   mov [ebx + 6], byte 1
+  mov edi, bool_eternal
+  cmp byte [edi], 1
+  je continue6
   mov [eax + 6], byte 1
 
+  continue6:
   pusha
   mov ax, 480
   mov cx, 50
@@ -459,6 +469,7 @@ destroy_alien:
   %undef punt_alien
   %undef punt_amount_shots
   %undef punt_living_aliens
+  %undef bool_eternal
   ret
 
 
@@ -469,6 +480,7 @@ destroy_box:
   %define punt_shots [ebp + 12]
   %define punt_amount_shots [ebp + 16]
   %define punt_bool [ebp + 20]
+  %define bool_eternal [ebp + 24]
 
   mov edi, punt_box
   cmp byte [edi + 6], 1
@@ -490,7 +502,11 @@ destroy_box:
     jmp destroy_box_end
 
   matched:
+  mov ebx, bool_eternal
+  cmp byte [ebx], 1
+  je is_eternal
   mov byte [eax + 6], 1
+  is_eternal:
   mov byte [edi + 6], 1
   mov eax, punt_bool
   mov byte [eax], 1
@@ -500,21 +516,12 @@ destroy_box:
   %undef punt_shots
   %undef punt_amount_shots
   %undef punt_bool
+  %undef bool_eternal
   END
   ret
 
 
 
-
-; global destroy_ultrashot
-; destroy_ultrashot:
-;   INI
-;   %define ultrashot [ebp + 8]
-;   %define punt_alien [ebp + 12]
-;   %define punt
-
-;   mov ebx, ultrashot
-;   mov eax, [ebx + 12] ; punt shots
 
 
 

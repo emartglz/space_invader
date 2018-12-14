@@ -10,7 +10,8 @@ section .data
 ship_shots_amount db 3
 alien_shots_amount db 10
 aliens_amount dd 30
-weapons_amount db 2
+weapons_amount db 3
+eternal_shot_amount db 1
 ultrashots_amount db 3
 cartel db "\
 @******************************************************************************@\
@@ -29,7 +30,7 @@ cartel db "\
 *                                                                              *\
 *                                 CRAZY  MODE                                  *\
 *                                                                              *\
-*                                SPACE SHOOTER             Integrantes:        *\
+*                                SPACE SHOOTER             Produced by:        *\
 *                                                                              *\
 *                                   ARCADE             Carmen Irene Cabrera    *\
 *                                                                              *\
@@ -105,7 +106,7 @@ drop_box resb 1 ;bool for dropping the surprise box
 timer_box resd 2 ; timer to move the surprise box
 timer_for_dropping resd 2 ; timer to drop the box
 
-special_weapons resd 2
+special_weapons resd 3
 current_weapon resd 1
 box_destroyed resb 1 ; 0 not destroyed, 1 destroyed
 bool_current resb 1 ; 0 there is no current weapon, 1 there is one
@@ -114,6 +115,8 @@ bool_current resb 1 ; 0 there is no current weapon, 1 there is one
 shield resd 5 ;ship, ship2
 ultrashot resd 5; shots (3), ship
 shots resd 6
+eternal_shot resd 4
+bool_eternal resb 1 ; bool to know whether the eternal shot is activated
 
 ini_fill_screen resd 2
 index_cartel resd 2
@@ -151,7 +154,7 @@ ship2_shots resd 6
 alien_shots resd 20
 
 wallpaper resd 2
-drawables resd 54
+drawables resd 55
 
 timer_alien resd 2
 timer_shot resd 2
@@ -174,6 +177,7 @@ extern create_box
 extern create_shield
 extern create_shot
 extern create_ultrashot
+extern create_eternal_shot
 
 ; Bind a key to a procedure
 %macro bind 2
@@ -231,7 +235,7 @@ game:
     mov [punctuation + eax - 8], dword 0
     mov [punctuation + eax - 4], dword 0
   loop ini_punctuation
-    
+
     mov [punctuation], dword ' YO '
     mov [punctuation + 4], dword 66666
     mov [punctuation + 8], dword ' Y  '
@@ -240,8 +244,8 @@ game:
     mov [punctuation + 20], dword 44444
     mov [punctuation + 24], dword ' NO!'
     mov [punctuation + 28], dword 33333
-    
-  
+
+
   start_game:
   mov [name], dword 0
 
@@ -500,13 +504,22 @@ game:
   mov [shots + 8], dword paint_shot
   mov [shots + 16], dword paint_shot
 
-  mov [weapons_amount], byte 2
+  mov [eternal_shot], dword paint_eternal_shot
+  mov [eternal_shot + 6], byte 1
+  mov [eternal_shot + 8], dword create_eternal_shot
+  mov [eternal_shot + 12], dword ship
+  mov byte [bool_eternal], 0
+
   mov [special_weapons], dword shield
   mov [special_weapons + 4], dword ultrashot
+  ; mov [special_weapons], dword eternal_shot
+  ; mov [special_weapons + 4], dword eternal_shot
+  mov [special_weapons + 8], dword eternal_shot
   mov [bool_current], byte 0
 
   mov [drawables + 208], dword shield
   mov [drawables + 212], dword ultrashot
+  mov [drawables + 216], dword eternal_shot
 
   xor eax, eax
   xor ebx, ebx
@@ -537,14 +550,23 @@ game:
       cmp eax, 0
       jne move_all_shots
       move_shots_ret:
-      DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship_shots
-      DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship2_shots
-      DESTROY_SHOTS points, alien_shots_amount, ultrashots_amount, alien_shots, shots
-      DESTROY_ALIEN points, living_aliens, alien, ship_shots, ship_shots_amount
-      DESTROY_ALIEN points, living_aliens, alien, ship2_shots, ship_shots_amount
-      DESTROY_ALIEN points, living_aliens, alien, shots, ultrashots_amount
+      DESTROY_SHOTS bool_eternal, points, alien_shots_amount, ship_shots_amount, alien_shots, ship_shots
+      DESTROY_SHOTS bool_eternal, points, alien_shots_amount, ship_shots_amount, alien_shots, ship2_shots
+      DESTROY_SHOTS bool_eternal, points, alien_shots_amount, ultrashots_amount, alien_shots, shots
+      DESTROY_ALIEN bool_eternal, points, living_aliens, alien, ship_shots, ship_shots_amount
+      DESTROY_ALIEN bool_eternal, points, living_aliens, alien, ship2_shots, ship_shots_amount
+      DESTROY_ALIEN bool_eternal, points, living_aliens, alien, shots, ultrashots_amount
       DESTROY_SHIP shield, alien_shots_amount, alien_shots, ship
       DESTROY_SHIP shield, alien_shots_amount, alien_shots, ship2
+
+      cmp byte [eternal_shot + 6], 1
+      je not_eternal
+      mov byte [bool_eternal], 1
+      DESTROY_ALIEN bool_eternal, points, living_aliens, alien, eternal_shot, eternal_shot_amount
+      DESTROY_SHOTS bool_eternal, points, alien_shots_amount, eternal_shot_amount, alien_shots, eternal_shot
+      DESTROY_BOX bool_eternal, box_destroyed, eternal_shot_amount, eternal_shot, surprise_box
+      mov byte [bool_eternal], 0
+      not_eternal:
 
       cmp [ship + 6], byte 0
       je ship1_ded
@@ -645,8 +667,9 @@ game:
       cmp eax, 0
       jne move_box
       move_box_end:
-      DESTROY_BOX box_destroyed, ship_shots_amount, ship_shots, surprise_box
-      DESTROY_BOX box_destroyed, ship_shots_amount, ship2_shots, surprise_box
+      DESTROY_BOX bool_eternal, box_destroyed, ship_shots_amount, ship_shots, surprise_box
+      DESTROY_BOX bool_eternal, box_destroyed, ship_shots_amount, ship2_shots, surprise_box
+      DESTROY_BOX bool_eternal, box_destroyed, ultrashots_amount, shots, surprise_box
 
       cmp byte [drop_box], 0
       je check_status
@@ -656,7 +679,7 @@ game:
       je generate_weapon
       generate_weapon_end:
 
-      REFRESH_MAP map, drawables, 54
+      REFRESH_MAP map, drawables, 55
 
 
       PAINT_MAP map
@@ -773,9 +796,9 @@ game_over_screen:
 
 ; the movement of the aliens depend on the chosen mode
 decide_alien_movement:
-  cmp [mode], byte 0 
+  cmp [mode], byte 0
     je move_alien
-  cmp [mode], byte 1 
+  cmp [mode], byte 1
     je move_alien
   cmp [mode], byte 2
     je move_alien
@@ -851,6 +874,7 @@ move_all_shots:
   MOVE_SHOTS ship_shots_amount, ship2_shots
   MOVE_SHOTS ship_shots_amount, ship_shots
   MOVE_ULTRASHOT ultrashot
+  MOVE_SHOTS eternal_shot_amount, eternal_shot
   jmp move_shots_ret
 
 
@@ -1047,33 +1071,6 @@ intelligent_aliens:
 
 
 
-; ;esp + 4 memory direction of the ship that shot
-; ;esp + 8 direction of the shot (0 down, 1 up, 2 diag-right-up, 3 diag-left-up)
-; ;esp + 12 direction of the array of shots
-; ;esp + 16 length of the array
-; create_shot:
-;   mov eax, [esp + 16]
-;   mov ecx, 0
-;   mov cl, [eax]
-;   mov eax, [esp + 12]
-;   find_available_shot:
-;   cmp byte [eax + 6], 1
-;   je create
-;   add eax, 8
-;   loop find_available_shot
-;   shot_finished:
-;   ret
-
-;   create:
-;   mov ebx, [esp + 4] ; ship that shot
-;   mov ecx, [esp + 8] ; direction of the shot
-;   mov dx, [ebx + 4] ; row and col
-;   mov [eax + 4], dx
-;   mov [eax + 6], byte 0
-;   mov [eax + 7], cl
-;   jmp shot_finished
-
-
 ;this function is only called when our ship was the one who shot
 the_ship_shot:
   cmp byte [ship + 6], 0
@@ -1146,50 +1143,6 @@ the_ship2_shot:
   .end:
   ret
 
-; Special weapon
-; ultrashot:
-;   cmp byte [ship + 6], 0
-;   je ultrashot_end
-;   mov dl, 3
-;   mov cl, [ship_shots_amount]
-;   mov eax, ship_shots
-;   yes:
-;     cmp byte [eax + 6], 1
-;     jne .continue
-;     dec dl
-;     cmp dl, 0
-;     je yes_end
-;     .continue:
-;     add eax, 8
-;   loop yes
-;   cmp dl, 0
-;   jne ultrashot_end
-;   yes_end:
-
-;   ;shot that goes up
-;   push ship_shots_amount
-;   push ship_shots
-;   push dword 1
-;   push ship
-;   call create_shot
-;   add esp, 16
-;   ;shot that goes to the right and up in diagonal direction
-;   push ship_shots_amount
-;   push ship_shots
-;   push dword 2
-;   push ship
-;   call create_shot
-;   add esp, 16
-;   ;shot that goes to the left and up in diagonal direction
-;   push ship_shots_amount
-;   push ship_shots
-;   push dword 3
-;   push ship
-;   call create_shot
-;   add esp, 16
-
-;   ultrashot_end:
-;   ret
 
 ;this is for cheating
 add_lives:
@@ -1510,7 +1463,7 @@ get_input:
 
     it_was_ss_mode:
     bind KEY.Q, use_weapon
-    ;bind KEY.1, add_lives
+    bind KEY.1, add_lives
 
     cmp byte [mode], 6
     jne not_two_players_mode
