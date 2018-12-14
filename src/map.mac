@@ -16,7 +16,13 @@ extern paint_ship2
 extern paint_cartel
 extern fill_ini_screen
 extern fill_end_screen
-extern paint_puntuation
+extern paint_punctuation
+extern paint_box
+extern paint_shield
+extern paint_ultrashot
+extern paint_eternal_shot
+extern paint_actual_power
+extern paint_lethal_line
 
 %endif
 

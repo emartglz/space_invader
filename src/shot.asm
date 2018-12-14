@@ -17,6 +17,46 @@ timer_sound resd 2
 
 section .text
 
+;ebp + 8 memory direction of the ship that shot
+;ebp + 12 direction of the shot (0 down, 1 up, 2 diag-right-up, 3 diag-left-up)
+;ebp + 16 direction of the array of shots
+;ebp + 20 length of the array
+global create_shot
+create_shot:
+  INI
+  %define punt_ship [ebp + 8]
+  %define mov_dir [ebp + 12]
+  %define punt_shots [ebp + 16]
+  %define shots_amount [ebp + 20]
+
+
+
+  mov ecx, shots_amount
+  mov eax, punt_shots
+  find_available_shot:
+  cmp byte [eax + 6], 1
+  je create
+  add eax, 8
+  loop find_available_shot
+  jmp shot_finished
+
+  create:
+  mov ebx, punt_ship ; ship that shot
+  mov ecx, mov_dir ; direction of the shot
+  mov dx, [ebx + 4] ; row and col
+  mov [eax + 4], dx
+  mov [eax + 6], byte 0
+  mov [eax + 7], cl
+
+  shot_finished:
+  %undef punt_ship
+  %undef mov_dir
+  %undef punt_shots
+  %undef shots_amount
+  END
+  ret
+
+
 ;destroy(pos1, pos2, type)
 ;pos1: object to be destroyed
 ;pos2: object that destroys
@@ -71,6 +111,7 @@ destroy_shots:
  %define punt_amount_ship_shots [ebp + 16]
  %define punt_amount_alien_shots [ebp + 20]
  %define punt_points [ebp + 24]
+ %define bool_eternal [ebp + 28]
 
   mov eax, punt_amount_ship_shots
   mov ecx, 0
@@ -107,8 +148,12 @@ destroy_shots:
 
   it_matched:
   mov [ebx + 6], byte 1
+  mov eax, bool_eternal
+  cmp byte [eax], 1
+  je continue7
   mov [edi + 6], byte 1
 
+  continue7:
   pusha
   mov ax, 1080
   mov cx, 50
@@ -144,6 +189,7 @@ destroy_ship:
   %define punt_ship [ebp + 8]
   %define punt_shot [ebp + 12]
   %define punt_amount_shots [ebp + 16]
+  %define punt_shield [ebp + 20]
 
   mov ebx, punt_ship
   mov dh, [ebx + 6]
@@ -183,7 +229,11 @@ destroy_ship:
   jmp same_row1_ret
 
   same_row1_correct2:
+  mov edi, punt_shield
+  cmp byte [edi + 6], 0
+  je safety
   dec byte [ebx + 6]
+  not_safety:
   mov [eax + 6], byte 1
   pusha
   mov ax, 780
@@ -191,8 +241,12 @@ destroy_ship:
   MAKE_SOUND ax, cx, timer_sound
   popa
   cmp byte [ebx + 6], 0
-  je finish
+  je finish_sound
   jmp same_row1_ret
+
+  safety:
+  mov byte [edi + 6], 1
+  jmp not_safety
 
 
   ; mov edi, punt_ship ; ship
@@ -233,6 +287,50 @@ destroy_ship:
   ;   je finish
   ;   jmp continue3
 
+finish_sound:
+  MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+    MAKE_SOUND 1000, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 700, 50, timer_sound
+    MAKE_SOUND 300, 50, timer_sound
+    MAKE_SOUND 500, 50, timer_sound
+    MAKE_SOUND 800, 50, timer_sound
+
+    jmp finish
+
   finish:
     END
     %undef punt_ship
@@ -254,6 +352,7 @@ destroy_alien:
   %define punt_alien [ebp + 16]
   %define punt_living_aliens [ebp + 20]
   %define punt_points [ebp + 24]
+  %define bool_eternal [ebp + 28]
 
 
   ; mov eax, punt_amount_shots
@@ -342,8 +441,12 @@ destroy_alien:
 
   same_row_correct2:
   mov [ebx + 6], byte 1
+  mov edi, bool_eternal
+  cmp byte [edi], 1
+  je continue6
   mov [eax + 6], byte 1
 
+  continue6:
   pusha
   mov ax, 480
   mov cx, 50
@@ -366,7 +469,66 @@ destroy_alien:
   %undef punt_alien
   %undef punt_amount_shots
   %undef punt_living_aliens
+  %undef bool_eternal
   ret
+
+
+global destroy_box
+destroy_box:
+  INI
+  %define punt_box [ebp + 8]
+  %define punt_shots [ebp + 12]
+  %define punt_amount_shots [ebp + 16]
+  %define punt_bool [ebp + 20]
+  %define bool_eternal [ebp + 24]
+
+  mov edi, punt_box
+  cmp byte [edi + 6], 1
+  je destroy_box_end
+
+  xor ecx, ecx
+  mov edx, punt_amount_shots
+  mov cl, [edx]
+  mov eax, punt_shots
+  xor edx, edx
+  mov dx, [edi + 4]; row and column of the box
+
+  for:
+    cmp byte [eax + 6], 1
+    je .continue
+    cmp [eax + 4], dx
+    je matched
+    .continue:
+    add eax, 8
+    loop for
+
+    jmp destroy_box_end
+
+  matched:
+  mov ebx, bool_eternal
+  cmp byte [ebx], 1
+  je is_eternal
+  mov byte [eax + 6], 1
+  is_eternal:
+  mov byte [edi + 6], 1
+  mov eax, punt_bool
+  mov byte [eax], 1
+
+  destroy_box_end:
+  %undef punt_box
+  %undef punt_shots
+  %undef punt_amount_shots
+  %undef punt_bool
+  %undef bool_eternal
+  END
+  ret
+
+
+
+
+
+
+
 
 global paint_shot
 paint_shot:

@@ -5,11 +5,15 @@
 %include "shot.mac"
 %include "puntuation.mac"
 %include "sound.mac"
+%include "lethal_line.mac"
 
 section .data
 ship_shots_amount db 3
 alien_shots_amount db 10
 aliens_amount dd 30
+weapons_amount db 4
+eternal_shot_amount db 1
+ultrashots_amount db 3
 cartel db "\
 @******************************************************************************@\
 *                                    _                           _             *\
@@ -27,13 +31,13 @@ cartel db "\
 *                                                                              *\
 *                                 CRAZY  MODE                                  *\
 *                                                                              *\
-*                                SPACE SHOOTER                                 *\
+*                                SPACE SHOOTER             Produced by:        *\
 *                                                                              *\
-*                                   ARCADE                                     *\
+*                                   ARCADE             Carmen Irene Cabrera    *\
 *                                                                              *\
-*                                 MULTIPLAYER                                  *\
+*                                 MULTIPLAYER          Enrique Martinez Glez   *\
 *                                                                              *\
-*                                 MIRROR MODE                                  *\
+*                                 MIRROR MODE                 C-212            *\
 *                                                                              *\
 @******************************************************************************@", 0
 cartel_game_over db "\
@@ -62,7 +66,32 @@ cartel_game_over db "\
 *                        ENTER YOUR NAME: ___ POINTS:                          *\
 *                                                                              *\
 @******************************************************************************@", 0
-
+pause_cartel db "\
+@******************************************************************************@\
+*                                    _                           _             *\
+*  ___  _ __    __ _   ___   ___    (_) _ __  __   __  __ _   __| |  ___  _ __ *\
+* / __|| '_ \  / _` | / __| / _ \   | || '_ \ \ \ / / / _` | / _` | / _ \| '__|*\
+* \__ \| |_) || (_| || (__ |  __/   | || | | | \ v / | (_| || (_| ||  __/| |   *\
+* |___/| .__/  \__,_| \___| \___|   |_||_| |_|  \_/   \__,_| \__,_| \___||_|   *\
+*      |_|                                                                     *\
+*                                                                              *\
+*                                   RESUME                                     *\
+*                                                                              *\
+*                                END THIS GAME                                 *\
+*                                                                              *\
+*                                    EXIT                                      *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+*                                                                              *\
+@******************************************************************************@", 0
 
 
 section .bss
@@ -73,6 +102,26 @@ alien resd 90
 points resd 2
 lives resd 3
 
+surprise_box resd 2
+drop_box resb 1 ;bool for dropping the surprise box
+timer_box resd 2 ; timer to move the surprise box
+timer_for_dropping resd 2 ; timer to drop the box
+
+timer_line resd 2
+
+special_weapons resd 4
+current_weapon resd 1
+box_destroyed resb 1 ; 0 not destroyed, 1 destroyed
+bool_current resb 1 ; 0 there is no current weapon, 1 there is one
+
+;dword function to paint, byte(shield + 6) 0-activated 1-notactivated, dword function to create
+shield resd 6 ;ship, ship2
+ultrashot resd 6; shots (3), ship
+shots resd 6
+eternal_shot resd 6
+bool_eternal resb 1 ; bool to know whether the eternal shot is activated
+lethal_line resd 6
+
 ini_fill_screen resd 2
 index_cartel resd 2
 ini_wallpaper resd 3
@@ -81,11 +130,14 @@ index resd 1
 
 end_wallpaper resd 5
 name resd 1
-puntuation resd 20
+punctuation resd 20
 new_puntation resd 2
-fill_puntuation resd 2
-puntuation_drawables resd 5
+fill_punctuation resd 2
+punctuation_drawables resd 5
 end_drawables resd 5
+
+pause_drawables resd 5
+pause_wallpaper resd 3
 
 living_aliens resd 1
 
@@ -106,7 +158,9 @@ ship2_shots resd 6
 alien_shots resd 20
 
 wallpaper resd 2
-drawables resd 51
+drawables resd 57
+
+actual_power resd 3
 
 timer_alien resd 2
 timer_shot resd 2
@@ -125,7 +179,6 @@ extern putc
 extern scan
 extern calibrate
 extern delay
-extern rtcs
 
 ; Bind a key to a procedure
 %macro bind 2
@@ -176,15 +229,24 @@ game:
   xor edx, edx
 
   mov ecx, 10
-  ini_puntuation:
+  ini_punctuation:
     mov eax, ecx
     mov ebx, 8
     mul ebx
-    mov [puntuation + eax - 8], dword 0
-    mov [puntuation + eax - 4], dword 0
-  loop ini_puntuation
-    
-  
+    mov [punctuation + eax - 8], dword 0
+    mov [punctuation + eax - 4], dword 0
+  loop ini_punctuation
+
+    mov [punctuation], dword ' YO '
+    mov [punctuation + 4], dword 66666
+    mov [punctuation + 8], dword ' Y  '
+    mov [punctuation + 12], dword 55555
+    mov [punctuation + 16], dword ' TU '
+    mov [punctuation + 20], dword 44444
+    mov [punctuation + 24], dword ' NO!'
+    mov [punctuation + 28], dword 33333
+
+
   start_game:
   mov [name], dword 0
 
@@ -195,7 +257,7 @@ game:
   ; Calibrate the timing
   call calibrate
 
-  ;jmp puntuation_screen
+  ;jmp punctuation_screen
 
   mov [game_start], byte 0
 
@@ -398,7 +460,7 @@ game:
   add edx, 4
   loop m_alien_shots
 
-
+;initializing other things
   mov [wallpaper], dword fill_map
 
   mov [ship], dword paint_ship
@@ -422,6 +484,64 @@ game:
 
   mov [drawables + 200], dword ship2
 
+  mov [surprise_box], dword paint_box
+  mov [surprise_box + 6], byte 1
+  mov [drawables + 204], dword surprise_box
+  mov [drop_box], byte 1
+  mov [box_destroyed], byte 0
+
+  mov [shield], dword paint_shield
+  mov [shield + 6], byte 1
+  mov [shield + 20], byte 'S'
+  mov [shield + 21], byte 8
+  mov [shield + 8], dword create_shield
+  mov [shield + 12], dword ship
+  mov [shield + 16], dword ship2
+
+  mov [ultrashot], dword paint_ultrashot
+  mov [ultrashot + 6], byte 1
+  mov [ultrashot + 20], byte 'U'
+  mov [ultrashot + 21], byte 5
+  mov [ultrashot + 8], dword create_ultrashot
+  mov [ultrashot + 12], dword shots
+  mov [ultrashot + 16], dword ship
+  mov [shots], dword paint_shot
+  mov [shots + 8], dword paint_shot
+  mov [shots + 16], dword paint_shot
+
+  mov [eternal_shot], dword paint_eternal_shot
+  mov [eternal_shot + 6], byte 1
+  mov [eternal_shot + 20], byte 'E'
+  mov [eternal_shot + 21], byte 4
+  mov [eternal_shot + 8], dword create_eternal_shot
+  mov [eternal_shot + 12], dword ship
+  mov byte [bool_eternal], 0
+
+  mov [lethal_line], dword paint_lethal_line
+  mov [lethal_line + 6], byte 1
+  mov [lethal_line + 8], dword create_lethal_line
+  mov [lethal_line + 20], byte 'L'
+  mov [lethal_line + 21], byte 3
+
+  mov [special_weapons], dword shield
+  mov [special_weapons + 4], dword ultrashot
+  ; mov [special_weapons], dword lethal_line
+  ; mov [special_weapons + 4], dword lethal_line
+  mov [special_weapons + 8], dword eternal_shot
+  ;mov [special_weapons + 8], dword lethal_line
+  mov [special_weapons + 12], dword lethal_line
+  mov [bool_current], byte 0
+
+  mov [drawables + 208], dword shield
+  mov [drawables + 212], dword ultrashot
+  mov [drawables + 216], dword eternal_shot
+  mov [drawables + 220], dword actual_power
+  mov [drawables + 224], dword lethal_line
+
+  mov [actual_power], dword paint_actual_power
+  mov [actual_power + 4], dword current_weapon
+  mov [actual_power + 8], dword bool_current
+
   xor eax, eax
   xor ebx, ebx
   xor ecx, ecx
@@ -434,12 +554,16 @@ game:
 
     .input:
       call get_input
+      cmp [game_start], byte 11;pause
+      je pause_screen
+      return_from_pause:
 
       xor eax, eax
       xor ebx, ebx
       xor ecx, ecx
       xor edx, edx
 
+;moving all the shots
       push dword 70
       push timer_shot
       call delay
@@ -447,12 +571,23 @@ game:
       cmp eax, 0
       jne move_all_shots
       move_shots_ret:
-      DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship_shots
-      DESTROY_SHOTS points, alien_shots_amount, ship_shots_amount, alien_shots, ship2_shots
-      DESTROY_ALIEN points, living_aliens, alien, ship_shots, ship_shots_amount
-      DESTROY_ALIEN points, living_aliens, alien, ship2_shots, ship_shots_amount
-      DESTROY_SHIP alien_shots_amount, alien_shots, ship
-      DESTROY_SHIP alien_shots_amount, alien_shots, ship2
+      DESTROY_SHOTS bool_eternal, points, alien_shots_amount, ship_shots_amount, alien_shots, ship_shots
+      DESTROY_SHOTS bool_eternal, points, alien_shots_amount, ship_shots_amount, alien_shots, ship2_shots
+      DESTROY_SHOTS bool_eternal, points, alien_shots_amount, ultrashots_amount, alien_shots, shots
+      DESTROY_ALIEN bool_eternal, points, living_aliens, alien, ship_shots, ship_shots_amount
+      DESTROY_ALIEN bool_eternal, points, living_aliens, alien, ship2_shots, ship_shots_amount
+      DESTROY_ALIEN bool_eternal, points, living_aliens, alien, shots, ultrashots_amount
+      DESTROY_SHIP shield, alien_shots_amount, alien_shots, ship
+      DESTROY_SHIP shield, alien_shots_amount, alien_shots, ship2
+
+      cmp byte [eternal_shot + 6], 1
+      je not_eternal
+      mov byte [bool_eternal], 1
+      DESTROY_ALIEN bool_eternal, points, living_aliens, alien, eternal_shot, eternal_shot_amount
+      DESTROY_SHOTS bool_eternal, points, alien_shots_amount, eternal_shot_amount, alien_shots, eternal_shot
+      DESTROY_BOX bool_eternal, box_destroyed, eternal_shot_amount, eternal_shot, surprise_box
+      mov byte [bool_eternal], 0
+      not_eternal:
 
       cmp [ship + 6], byte 0
       je ship1_ded
@@ -473,7 +608,7 @@ game:
         add esi, 12
       loop check_last_fill_aliens
       popa
-
+; aliens velocity of movement
       xor eax, eax
       call decide_aliens_velocity
       push eax
@@ -494,8 +629,22 @@ game:
       xor ecx, ecx
       xor edx, edx
 
+; lethal line activity
+      cmp byte [lethal_line + 6], 0
+      jne not_line
+      push dword 3000
+      push timer_line
+      call delay
+      add esp, 8
 
-  ; random shots for the aliens
+      cmp eax, 0
+      jne deactivate
+      deactivate_ret:
+
+      not_line:
+
+
+; random shots for the aliens
 
       cmp byte[bool_for_random], 1
       jne timer
@@ -515,7 +664,9 @@ game:
       cmp byte [mode], 4
       je intelligent_aliens
 
-      push alien_shots_amount
+      xor edx, edx
+      mov dl, [alien_shots_amount]
+      push edx
       push alien_shots
       push dword 0
       push eax
@@ -539,8 +690,31 @@ game:
 
       continue3:
 
+; random for dropping the surprise boxes
+      cmp byte [drop_box], 1
+      je random_dropping
+      random_dropping_end:
 
-      REFRESH_MAP map, drawables, 51
+      push dword 500
+      push timer_box
+      call delay
+      add esp, 8
+      cmp eax, 0
+      jne move_box
+      move_box_end:
+      DESTROY_BOX bool_eternal, box_destroyed, ship_shots_amount, ship_shots, surprise_box
+      DESTROY_BOX bool_eternal, box_destroyed, ship_shots_amount, ship2_shots, surprise_box
+      DESTROY_BOX bool_eternal, box_destroyed, ultrashots_amount, shots, surprise_box
+
+      cmp byte [drop_box], 0
+      je check_status
+      check_end:
+
+      cmp byte [box_destroyed], 1
+      je generate_weapon
+      generate_weapon_end:
+
+      REFRESH_MAP map, drawables, 57
 
 
       PAINT_MAP map
@@ -565,20 +739,65 @@ ship1_ded:
   je game_over_screen
   jmp ret_ship1_ded
 
-puntuation_screen:
+pause_screen:
   mov [ini_fill_screen], dword fill_map
-  mov [fill_puntuation], dword paint_puntuation
-  mov [fill_puntuation + 4], dword puntuation
-  mov [puntuation_drawables], dword ini_fill_screen
-  mov [puntuation_drawables + 4], dword fill_puntuation
 
-  puntuation_screen_loop:
+  mov [pause_wallpaper], dword fill_ini_screen
+  mov [pause_wallpaper + 4], dword pause_cartel
+  mov [pause_wallpaper + 8], byte 1
+
+  mov [index_cartel], dword paint_cartel
+  mov [index_cartel + 4], dword index
+  mov [index], byte 8
+  mov [index + 1], byte 8
+  mov [index + 2], byte 12
+
+  mov [pause_drawables], dword ini_fill_screen
+  mov [pause_drawables + 4], dword index_cartel
+  mov [pause_drawables + 8], dword pause_wallpaper
+
+  pause_screen_loop:
+  call get_input_pause_screen
+
+  cmp [game_start], byte 20
+  je decide_pause
+
+  push dword 1000
+  push timer_wallpaper_ini
+  call delay
+  cmp eax, 0
+  jne change_wallpaper_ini2
+  ret_change_walpaper_ini2:
+
+  add esp, 8
+
+  REFRESH_MAP map, pause_drawables, 3
+  PAINT_MAP map
+
+  jmp pause_screen_loop
+
+decide_pause:
+  cmp [index], byte 8
+  je return_from_pause
+  cmp [index], byte 10
+  je game_over_screen
+  cmp [index], byte 12
+  je start_game
+
+punctuation_screen:
+  mov [ini_fill_screen], dword fill_map
+  mov [fill_punctuation], dword paint_punctuation
+  mov [fill_punctuation + 4], dword punctuation
+  mov [punctuation_drawables], dword ini_fill_screen
+  mov [punctuation_drawables + 4], dword fill_punctuation
+
+  punctuation_screen_loop:
     call get_input_puntation_screen
     cmp [game_start], byte 10
     je start_game
-    REFRESH_MAP map, puntuation_drawables, 2
+    REFRESH_MAP map, punctuation_drawables, 2
     PAINT_MAP map
-  jmp puntuation_screen_loop
+  jmp punctuation_screen_loop
 
 
 game_over_screen:
@@ -594,7 +813,7 @@ game_over_screen:
   game_over_screen_loop:
   call get_input_game_over_screen
   cmp [game_start], byte 0
-  je puntuation_screen
+  je punctuation_screen
 
   push dword 1000
   push dword timer_wallpaper_end
@@ -612,9 +831,9 @@ game_over_screen:
 
 ; the movement of the aliens depend on the chosen mode
 decide_alien_movement:
-  cmp [mode], byte 0 
+  cmp [mode], byte 0
     je move_alien
-  cmp [mode], byte 1 
+  cmp [mode], byte 1
     je move_alien
   cmp [mode], byte 2
     je move_alien
@@ -636,6 +855,12 @@ change_wallpaper_end:
   ret_mod_16_end:
   jmp ret_change_walpaper_end
 
+change_wallpaper_ini2:
+  inc byte [pause_wallpaper + 8]
+  cmp byte [pause_wallpaper + 8], 16
+  je  mod_16_ini2
+  ret_mod_16_ini2:
+  jmp ret_change_walpaper_ini2
 
 mod_16_end:
   mov [end_wallpaper + 8], byte 1
@@ -647,6 +872,10 @@ change_wallpaper_ini:
   je  mod_16_ini
   ret_mod_16_ini:
   jmp ret_change_walpaper_ini
+
+mod_16_ini2:
+  mov [pause_wallpaper + 8], byte 1
+  jmp ret_mod_16_ini2
 
 mod_16_ini:
   mov [ini_wallpaper + 8], byte 1
@@ -664,6 +893,7 @@ generate_aliens:
     xor edx, edx
     mov ebx, 75
     div ebx
+    add edx, 2
     mov [edi + 4], byte 1
     mov [edi + 5], dl
     mov [edi + 6], byte 0
@@ -678,6 +908,9 @@ move_all_shots:
   MOVE_SHOTS alien_shots_amount, alien_shots
   MOVE_SHOTS ship_shots_amount, ship2_shots
   MOVE_SHOTS ship_shots_amount, ship_shots
+  MOVE_ULTRASHOT ultrashot
+  MOVE_SHOTS eternal_shot_amount, eternal_shot
+  ANNIHILATE living_aliens, alien, lethal_line
   jmp move_shots_ret
 
 
@@ -874,38 +1107,13 @@ intelligent_aliens:
 
 
 
-;esp + 4 memory direction of the ship that shot
-;esp + 8 direction of the shot (0 down, 1 up, 2 diag-right-up, 3 diag-left-up)
-;esp + 12 direction of the array of shots
-;esp + 16 length of the array
-create_shot:
-  mov eax, [esp + 16]
-  mov ecx, 0
-  mov cl, [eax]
-  mov eax, [esp + 12]
-  find_available_shot:
-  cmp byte [eax + 6], 1
-  je create
-  add eax, 8
-  loop find_available_shot
-  shot_finished:
-  ret
-
-  create:
-  mov ebx, [esp + 4] ; ship that shot
-  mov ecx, [esp + 8] ; direction of the shot
-  mov dx, [ebx + 4] ; row and col
-  mov [eax + 4], dx
-  mov [eax + 6], byte 0
-  mov [eax + 7], cl
-  jmp shot_finished
-
-
 ;this function is only called when our ship was the one who shot
 the_ship_shot:
   cmp byte [ship + 6], 0
   je .end
-  push ship_shots_amount
+  xor edx, edx
+  mov dl, [ship_shots_amount]
+  push edx
   push ship_shots
   push dword 1
   push ship
@@ -917,7 +1125,9 @@ the_ship_shot:
 the_ship_shot_down:
   cmp byte [ship + 6], 0
   je .end
-  push ship_shots_amount
+  xor edx, edx
+  mov dl, [ship_shots_amount]
+  push edx
   push ship_shots
   push dword 0
   push ship
@@ -929,7 +1139,9 @@ the_ship_shot_down:
 the_ship_shot_left:
   cmp byte [ship + 6], 0
   je .end
-  push ship_shots_amount
+  xor edx, edx
+  mov dl, [ship_shots_amount]
+  push edx
   push ship_shots
   push dword 5
   push ship
@@ -941,7 +1153,9 @@ the_ship_shot_left:
 the_ship_shot_right:
   cmp byte [ship + 6], 0
   je .end
-  push ship_shots_amount
+  xor edx, edx
+  mov dl, [ship_shots_amount]
+  push edx
   push ship_shots
   push dword 4
   push ship
@@ -954,7 +1168,9 @@ the_ship_shot_right:
 the_ship2_shot:
   cmp byte [ship2 + 6], 0
   je .end
-  push ship_shots_amount
+  xor edx, edx
+  mov dl, [ship_shots_amount]
+  push edx
   push ship2_shots
   push dword 1
   push ship2
@@ -963,50 +1179,6 @@ the_ship2_shot:
   .end:
   ret
 
-; Special weapon
-ultrashot:
-  cmp byte [ship + 6], 0
-  je ultrashot_end
-  mov dl, 3
-  mov cl, [ship_shots_amount]
-  mov eax, ship_shots
-  yes:
-    cmp byte [eax + 6], 1
-    jne .continue
-    dec dl
-    cmp dl, 0
-    je yes_end
-    .continue:
-    add eax, 8
-  loop yes
-  cmp dl, 0
-  jne ultrashot_end
-  yes_end:
-
-  ;shot that goes up
-  push ship_shots_amount
-  push ship_shots
-  push dword 1
-  push ship
-  call create_shot
-  add esp, 16
-  ;shot that goes to the right and up in diagonal direction
-  push ship_shots_amount
-  push ship_shots
-  push dword 2
-  push ship
-  call create_shot
-  add esp, 16
-  ;shot that goes to the left and up in diagonal direction
-  push ship_shots_amount
-  push ship_shots
-  push dword 3
-  push ship
-  call create_shot
-  add esp, 16
-
-  ultrashot_end:
-  ret
 
 ;this is for cheating
 add_lives:
@@ -1017,6 +1189,9 @@ add_lives:
   ret
 
 
+deactivate:
+  mov [lethal_line + 6], byte 1
+  jmp deactivate_ret
 
 decide_mode_lives:
   cmp byte [mode], 0 ; easy mode
@@ -1040,14 +1215,17 @@ decide_mode_lives:
 
   easy_lives:
   mov [ship + 6], byte 5
+  mov [ship2 + 6], byte 0
   jmp decide_mode_lives.end
 
   medium_lives:
   mov [ship + 6], byte 3
+  mov [ship2 + 6], byte 0
   jmp decide_mode_lives.end
 
   hard_lives:
   mov [ship + 6], byte 1
+  mov [ship2 + 6], byte 0
   jmp decide_mode_lives.end
 
   two_players_lives:
@@ -1069,7 +1247,7 @@ decide_aliens_velocity:
   cmp byte [mode], 5 ; arcade mode
   je easy_velocity
   cmp byte [mode], 6 ; two players mode
-  je easy_velocity
+  je hard_velocity
   cmp byte [mode], 7 ; mirror mode
   je hard_velocity
   .end:
@@ -1153,6 +1331,71 @@ infinite_move:
  jmp infinite_move.end
 
 
+
+random_dropping:
+  rdtsc
+  xor edx, edx
+  mov ebx, 1000
+  div ebx
+  ;mov edx, 34
+  cmp edx, 10
+  jb drop_it
+  drop_it_end:
+  mov [drop_box], byte 0
+  jmp random_dropping_end
+
+
+drop_it:
+  push dword surprise_box
+  call create_box
+  add esp, 4
+  jmp drop_it_end
+
+move_box:
+  MOVE_BOX surprise_box
+  jmp move_box_end
+
+
+check_status:
+  cmp byte [surprise_box + 6], 1
+  jne check_end
+  mov byte [drop_box], 1
+  jmp check_end
+
+
+generate_weapon:
+  mov byte [box_destroyed], 0 ;restore bool to false
+  rdtsc
+  xor edx, edx
+  xor ebx, ebx
+  mov bl, [weapons_amount]
+  div ebx
+  xor eax, eax
+  mov eax, edx
+  mov edx, 4
+  mul edx
+  mov ecx, [special_weapons + eax]
+  mov [current_weapon], ecx
+  mov [bool_current], byte 1
+  xor eax, eax
+  xor ebx, ebx
+  xor ecx, ecx
+  xor edx, edx
+  jmp generate_weapon_end
+
+use_weapon:
+  cmp byte [bool_current], 0
+  je not_used
+  mov eax, [current_weapon]
+  CREATE_ESPECIAL_SHOTS eax, [eax + 8]
+  ;push eax
+  ;call dword [eax + 8]
+  ;add esp, 4
+  mov [bool_current], byte 0
+  not_used:
+  ret
+
+
 enter_game:
   mov [game_start], byte 1
   ret
@@ -1168,12 +1411,20 @@ name_taked:
   mov eax, [points + 4]
   mov [new_puntation + 4], eax
 
-  ADD_PUNTUATION new_puntation, puntuation
+  ADD_PUNCTUATION new_puntation, punctuation
   mov [game_start], byte 0
+  ret
+
+make_pause:
+  mov [game_start], byte 11
   ret
 
 exit_puntation:
   mov [game_start], byte 10
+  ret
+
+exit_pause:
+  mov [game_start], byte 20
   ret
 
 get_input_puntation_screen:
@@ -1192,7 +1443,15 @@ get_input_game_over_screen:
   add esp, 2
   ret
 
-global get_input_first_screen
+get_input_pause_screen:
+  call scan
+  push ax
+  bind_move KEY.UP, MOVE_UP_CARTEL, index
+  bind_move KEY.DOWN, MOVE_DOWN_CARTEL, index
+  bind KEY.ENTER, exit_pause
+  add esp, 2
+  ret
+
 get_input_first_screen:
   call scan
   push ax
@@ -1210,15 +1469,16 @@ get_input:
     ; The value of the input is on 'word [esp]'
     ; Your bindings here
 
-    bind_move KEY.UP, MOVE_UP, ship
-    bind_move KEY.DOWN, MOVE_DOWN, ship
+    bind KEY.Esc, make_pause
+    ;bind_move KEY.UP, MOVE_UP, ship
+    ;bind_move KEY.DOWN, MOVE_DOWN, ship
     bind_move KEY.RIGHT, MOVE_RIGHT, ship
     bind_move KEY.LEFT, MOVE_LEFT, ship
 
     cmp byte [mode], 7
     jne not_mirror_mode
-    bind_move KEY.UP, MOVE_UP, ship2
-    bind_move KEY.DOWN, MOVE_DOWN, ship2
+    ;bind_move KEY.UP, MOVE_UP, ship2
+    ;bind_move KEY.DOWN, MOVE_DOWN, ship2
     bind_move KEY.RIGHT, MOVE_LEFT, ship2
     bind_move KEY.LEFT, MOVE_RIGHT, ship2
 
@@ -1228,6 +1488,8 @@ get_input:
 
     cmp byte [mode], 4
     jne not_space_shooter_mode
+    bind_move KEY.UP, MOVE_UP, ship
+    bind_move KEY.DOWN, MOVE_DOWN, ship
     bind KEY.W, the_ship_shot
     bind KEY.S, the_ship_shot_down
     bind KEY.D, the_ship_shot_right
@@ -1239,15 +1501,15 @@ get_input:
     bind KEY.Spc, the_ship_shot
 
     it_was_ss_mode:
-    bind KEY.Q, ultrashot
+    bind KEY.Q, use_weapon
     bind KEY.1, add_lives
 
     cmp byte [mode], 6
     jne not_two_players_mode
 
     ;this will only happen if it is two_players mode
-    bind_move KEY.W, MOVE_UP, ship2
-    bind_move KEY.S, MOVE_DOWN, ship2
+    ;bind_move KEY.W, MOVE_UP, ship2
+    ;bind_move KEY.S, MOVE_DOWN, ship2
     bind_move KEY.D, MOVE_RIGHT, ship2
     bind_move KEY.A, MOVE_LEFT, ship2
 

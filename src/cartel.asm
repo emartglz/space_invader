@@ -34,8 +34,8 @@ paint_cartel:
         mul ebx
         add esi, eax
         push ecx
-        add esi, 100
-        mov ecx, 30
+        add esi, 120
+        mov ecx, 18
         ciclo3:
             mov [esi], byte ' '
             mov [esi + 1], byte 0b0100_0000

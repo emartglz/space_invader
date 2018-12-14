@@ -20,14 +20,14 @@
     %%end:
 %endmacro
 
-global paint_puntuation
-paint_puntuation:
+global paint_punctuation
+paint_punctuation:
     INI
     %define punt_map[ebp + 12]
-    %define punt_puntuations[ebp + 8]
+    %define punt_punctuations[ebp + 8]
 
     mov esi, punt_map
-    mov eax, punt_puntuations
+    mov eax, punt_punctuations
     mov edi, [eax + 4]
     add esi, 960
     mov ecx, 10
@@ -84,7 +84,7 @@ paint_puntuation:
 
     END
     %undef punt_map
-    %undef punt_puntuations
+    %undef punt_punctuations
     ret
 
 global take_name
@@ -120,7 +120,7 @@ take_name:
     ASCII al, KEY.S, 'S'
     ASCII al, KEY.T, 'T'
     ASCII al, KEY.U, 'U'
-    ASCII al, KEY.V, 'V' 
+    ASCII al, KEY.V, 'V'
     ASCII al, KEY.W, 'W'
     ASCII al, KEY.X, 'X'
     ASCII al, KEY.Y, 'Y'
@@ -133,7 +133,8 @@ take_name:
     ASCII al, KEY.6, '6'
     ASCII al, KEY.7, '7'
     ASCII al, KEY.8, '8'
-    ASCII al, KEY.9, '9'    
+    ASCII al, KEY.9, '9'
+    ASCII al, KEY.BckSp, byte 0  
 
     jmp take_name_end
 
@@ -147,19 +148,34 @@ take_name:
     cmp [ebx + 3], byte 0
     je ini3
 
+    cmp al, 0
+    jne take_name_end
+    mov [ebx + 3], byte 0
+
+
     jmp take_name_end
 
     ini1:
     mov [ebx + 1], al
     jmp take_name_end
     ini2:
+    cmp al, 0
+    je del2
     mov [ebx + 2], al
     jmp take_name_end
     ini3:
+    cmp al, 0
+    je del3
     mov [ebx + 3], al
     jmp take_name_end
 
-    
+    del2:
+    mov [ebx + 1], byte 0
+    jmp take_name_end
+
+    del3:
+    mov [ebx + 2], byte 0
+    jmp take_name_end
 
     take_name_end:
 
@@ -231,6 +247,6 @@ add_puntuation:
     end:
 
     END
-    %undef punt_puntuations
-    %undef punt_new_puntuation
+    %undef punt_punctuations
+    %undef punt_new_punctuation
     ret

@@ -8,7 +8,7 @@ extern take_name
 
 %endif
 ;1- new puntuation, 2- puntuations
-%macro ADD_PUNTUATION 2
+%macro ADD_PUNCTUATION 2
 push %1
 push %2
 call add_puntuation
