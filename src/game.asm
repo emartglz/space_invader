@@ -112,10 +112,10 @@ box_destroyed resb 1 ; 0 not destroyed, 1 destroyed
 bool_current resb 1 ; 0 there is no current weapon, 1 there is one
 
 ;dword function to paint, byte(shield + 6) 0-activated 1-notactivated, dword function to create
-shield resd 5 ;ship, ship2
-ultrashot resd 5; shots (3), ship
+shield resd 6 ;ship, ship2
+ultrashot resd 6; shots (3), ship
 shots resd 6
-eternal_shot resd 4
+eternal_shot resd 6
 bool_eternal resb 1 ; bool to know whether the eternal shot is activated
 
 ini_fill_screen resd 2
@@ -154,7 +154,9 @@ ship2_shots resd 6
 alien_shots resd 20
 
 wallpaper resd 2
-drawables resd 55
+drawables resd 56
+
+actual_power resd 3
 
 timer_alien resd 2
 timer_shot resd 2
@@ -173,11 +175,6 @@ extern putc
 extern scan
 extern calibrate
 extern delay
-extern create_box
-extern create_shield
-extern create_shot
-extern create_ultrashot
-extern create_eternal_shot
 
 ; Bind a key to a procedure
 %macro bind 2
@@ -490,13 +487,17 @@ game:
   mov [box_destroyed], byte 0
 
   mov [shield], dword paint_shield
+  mov [shield + 6], byte 1
+  mov [shield + 20], byte 'S'
+  mov [shield + 21], byte 8
   mov [shield + 8], dword create_shield
   mov [shield + 12], dword ship
   mov [shield + 16], dword ship2
-  mov [shield + 6], byte 1
 
   mov [ultrashot], dword paint_ultrashot
   mov [ultrashot + 6], byte 1
+  mov [ultrashot + 20], byte 'U'
+  mov [ultrashot + 21], byte 5
   mov [ultrashot + 8], dword create_ultrashot
   mov [ultrashot + 12], dword shots
   mov [ultrashot + 16], dword ship
@@ -506,6 +507,8 @@ game:
 
   mov [eternal_shot], dword paint_eternal_shot
   mov [eternal_shot + 6], byte 1
+  mov [eternal_shot + 20], byte 'E'
+  mov [eternal_shot + 21], byte 4
   mov [eternal_shot + 8], dword create_eternal_shot
   mov [eternal_shot + 12], dword ship
   mov byte [bool_eternal], 0
@@ -520,6 +523,11 @@ game:
   mov [drawables + 208], dword shield
   mov [drawables + 212], dword ultrashot
   mov [drawables + 216], dword eternal_shot
+  mov [drawables + 220], dword actual_power
+
+  mov [actual_power], dword paint_actual_power
+  mov [actual_power + 4], dword current_weapon
+  mov [actual_power + 8], dword bool_current
 
   xor eax, eax
   xor ebx, ebx
@@ -679,7 +687,7 @@ game:
       je generate_weapon
       generate_weapon_end:
 
-      REFRESH_MAP map, drawables, 55
+      REFRESH_MAP map, drawables, 56
 
 
       PAINT_MAP map
@@ -1349,9 +1357,10 @@ use_weapon:
   cmp byte [bool_current], 0
   je not_used
   mov eax, [current_weapon]
-  push eax
-  call dword [eax + 8]
-  add esp, 4
+  CREATE_ESPECIAL_SHOTS eax, [eax + 8]
+  ;push eax
+  ;call dword [eax + 8]
+  ;add esp, 4
   mov [bool_current], byte 0
   not_used:
   ret
@@ -1376,7 +1385,7 @@ name_taked:
   mov [game_start], byte 0
   ret
 
-make_pause
+make_pause:
   mov [game_start], byte 11
   ret
 
