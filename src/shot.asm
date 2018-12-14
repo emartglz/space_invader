@@ -491,11 +491,14 @@ destroy_box:
   mov cl, [edx]
   mov eax, punt_shots
   xor edx, edx
-  mov dx, [edi + 4]
+  mov dx, [edi + 4]; row and column of the box
 
   for:
+    cmp byte [eax + 6], 1
+    je .continue
     cmp [eax + 4], dx
     je matched
+    .continue:
     add eax, 8
     loop for
 

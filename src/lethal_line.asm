@@ -39,7 +39,7 @@ paint_lethal_line:
     mov [eax + 1], byte 4
     jmp continue
     odd_col:
-    mov [eax + 1], byte 7
+    mov [eax + 1], byte 1
     continue:
     add eax, 4
     loop fill_row
