@@ -26,8 +26,6 @@ paint_lethal_line:
     mov bl, 80
     mul bl
     xor ebx, ebx
-    ; mov bl, [edi + 5]
-    ; add eax, ebx
     mov ebx, 4
     mul ebx
     add eax, punt_map
@@ -39,8 +37,10 @@ paint_lethal_line:
     shr edx, 1
     jc odd_col
     mov [eax + 1], byte 4
+    jmp continue
     odd_col:
     mov [eax + 1], byte 7
+    continue:
     add eax, 4
     loop fill_row
 
@@ -61,7 +61,7 @@ create_lethal_line:
     cmp byte [edi + 6], 0
     je .end
 
-    mov [edi + 4], byte 50
+    mov [edi + 4], byte 13
     mov [edi + 5], byte 0
     mov [edi + 6], byte 0
 

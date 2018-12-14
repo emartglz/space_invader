@@ -5,12 +5,13 @@
 %include "shot.mac"
 %include "puntuation.mac"
 %include "sound.mac"
+%include "lethal_line.mac"
 
 section .data
 ship_shots_amount db 3
 alien_shots_amount db 10
 aliens_amount dd 30
-weapons_amount db 3
+weapons_amount db 4
 eternal_shot_amount db 1
 ultrashots_amount db 3
 cartel db "\
@@ -106,7 +107,9 @@ drop_box resb 1 ;bool for dropping the surprise box
 timer_box resd 2 ; timer to move the surprise box
 timer_for_dropping resd 2 ; timer to drop the box
 
-special_weapons resd 3
+timer_line resd 2
+
+special_weapons resd 4
 current_weapon resd 1
 box_destroyed resb 1 ; 0 not destroyed, 1 destroyed
 bool_current resb 1 ; 0 there is no current weapon, 1 there is one
@@ -117,6 +120,7 @@ ultrashot resd 6; shots (3), ship
 shots resd 6
 eternal_shot resd 6
 bool_eternal resb 1 ; bool to know whether the eternal shot is activated
+lethal_line resd 6
 
 ini_fill_screen resd 2
 index_cartel resd 2
@@ -154,7 +158,7 @@ ship2_shots resd 6
 alien_shots resd 20
 
 wallpaper resd 2
-drawables resd 56
+drawables resd 57
 
 actual_power resd 3
 
@@ -513,17 +517,26 @@ game:
   mov [eternal_shot + 12], dword ship
   mov byte [bool_eternal], 0
 
+  mov [lethal_line], dword paint_lethal_line
+  mov [lethal_line + 6], byte 1
+  mov [lethal_line + 8], dword create_lethal_line
+  mov [lethal_line + 20], byte 'L'
+  mov [lethal_line + 21], byte 3
+
   mov [special_weapons], dword shield
   mov [special_weapons + 4], dword ultrashot
-  ; mov [special_weapons], dword eternal_shot
-  ; mov [special_weapons + 4], dword eternal_shot
+  ; mov [special_weapons], dword lethal_line
+  ; mov [special_weapons + 4], dword lethal_line
   mov [special_weapons + 8], dword eternal_shot
+  ;mov [special_weapons + 8], dword lethal_line
+  mov [special_weapons + 12], dword lethal_line
   mov [bool_current], byte 0
 
   mov [drawables + 208], dword shield
   mov [drawables + 212], dword ultrashot
   mov [drawables + 216], dword eternal_shot
   mov [drawables + 220], dword actual_power
+  mov [drawables + 224], dword lethal_line
 
   mov [actual_power], dword paint_actual_power
   mov [actual_power + 4], dword current_weapon
@@ -595,7 +608,7 @@ game:
         add esi, 12
       loop check_last_fill_aliens
       popa
-
+; aliens velocity of movement
       xor eax, eax
       call decide_aliens_velocity
       push eax
@@ -615,6 +628,20 @@ game:
       xor ebx, ebx
       xor ecx, ecx
       xor edx, edx
+
+; lethal line activity
+      cmp byte [lethal_line + 6], 0
+      jne not_line
+      push dword 3000
+      push timer_line
+      call delay
+      add esp, 8
+
+      cmp eax, 0
+      jne deactivate
+      deactivate_ret:
+
+      not_line:
 
 
 ; random shots for the aliens
@@ -687,7 +714,7 @@ game:
       je generate_weapon
       generate_weapon_end:
 
-      REFRESH_MAP map, drawables, 56
+      REFRESH_MAP map, drawables, 57
 
 
       PAINT_MAP map
@@ -883,6 +910,7 @@ move_all_shots:
   MOVE_SHOTS ship_shots_amount, ship_shots
   MOVE_ULTRASHOT ultrashot
   MOVE_SHOTS eternal_shot_amount, eternal_shot
+  ANNIHILATE living_aliens, alien, lethal_line
   jmp move_shots_ret
 
 
@@ -1161,7 +1189,9 @@ add_lives:
   ret
 
 
-
+deactivate:
+  mov [lethal_line + 6], byte 1
+  jmp deactivate_ret
 
 decide_mode_lives:
   cmp byte [mode], 0 ; easy mode

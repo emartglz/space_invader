@@ -13,6 +13,7 @@ extern create_shield
 extern create_shot
 extern create_ultrashot
 extern create_eternal_shot
+extern create_lethal_line
 
 %endif
 
